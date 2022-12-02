@@ -80,15 +80,15 @@ image = ImageTk.PhotoImage(image)
 
 # large_image = original_image.subsample(2,2)
 # Label(right_frame,  image=image).pack(fill='both',  padx=5,  pady=5)
-canvas = Canvas(right_frame, bg='grey', height=450)
-canvas.pack(fill='both', expand=1, padx=5, pady=5)
-
+canvas = Canvas(right_frame, bg='grey')
+#canvas.pack()#(fill='both', expand=1, padx=5, pady=5)
 canvas.bind("<Button-1>", get_x_and_y)
 canvas.bind("<B1-Motion>", draw_smth)
 canvas.bind('<Motion>', callback)
 
 canvas.create_image(0, 0, image=image, anchor='nw')
-
+canvas.pack()
+canvas.config(height=image.height(),width=image.width())
 tool_bar3 = Frame(right_frame, height=150, width=80, bg='lightgrey')
 tool_bar3.pack(fill='both',padx=5,  pady=5)
 
