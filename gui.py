@@ -89,7 +89,8 @@ canvas.bind('<Motion>', callback)
 
 canvas.create_image(0, 0, image=image, anchor='nw')
 
-tool_bar3 = Frame(right_frame, height=150, width=80, bg='lightgrey').pack(fill='both',padx=5,  pady=5)
+tool_bar3 = Frame(right_frame, height=150, width=80, bg='lightgrey')
+tool_bar3.pack(fill='both',padx=5,  pady=5)
 
 # Button(tool_bar3, text='Select a Color',  command=change_color).grid(row=0,column=0, padx=5,  pady=5)
 # Button( tool_bar3,text='delete line',command=delete_line).grid(row=0,column=1, padx=5,  pady=5)
