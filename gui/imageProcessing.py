@@ -6,17 +6,10 @@ import math
 
 class ImageProcessing:
 
-    def rotate(self,  rotation=180):
-        img = Image.open("../img.png")
-        img = img.resize((IMAGE_HIEGHT, IMAGE_WIDTH))
-        img = img.rotate(rotation)
-        img = ImageTk.PhotoImage(img)
-        return img
-        # canvas.delete("image")
-        # canvas.create_image(0, 0, image=img7, anchor='nw', tag="image")
-        # canvas.image = img7
+    def rotate(self, img, rotation=180):
+        return img.rotate(rotation)
 
-    def ScaleRotateTranslate(self, image, angle, center=None, new_center=None, scale=None, expand=False):
+    def scale_rotate_translate(self, image, angle=0, center=(0,0), new_center=None, scale=None, expand=False):
         if center is None:
             return image.rotate(angle)
         angle = -angle / 180.0 * math.pi
@@ -34,14 +27,9 @@ class ImageProcessing:
         d = -sine / sy
         e = cosine / sy
         f = y - nx * d - ny * e
-        return image.transform(image.size, Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
+        # print(image.size)
+        return image.transform((IMAGE_HIEGHT,IMAGE_WIDTH), Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
 
-    def update(self):
-        img = Image.open("img.png")
-        img = img.resize((380, 450))
-
-        # img6 =  ScaleRotateTranslate(img,0, (0,0),(180,180))
-        img7 = ImageTk.PhotoImage(img6)
-        # canvas.delete("image")
-        # canvas.create_image(0, 0, image=img7, anchor='nw', tag="image")
-        # canvas.image = img7
+    def resize(self,img):
+        img = img.resize((200, 200))
+        return img
