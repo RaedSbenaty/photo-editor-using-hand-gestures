@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfilename
 from tkinter.colorchooser import askcolor
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageGrab
 
 from choice import Choice
 from constants import *
@@ -19,7 +19,17 @@ class Gui:
 
         self.root.title("Image Editor")
         # self.master.maxsize(900, 900)
-        self.root.config(bg="skyblue", height=900, width=900)
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        w = 700
+        h = 650
+        x = (screen_width / 2) - (w / 2)
+        y = (screen_height / 2) - (h / 2)
+
+        self.root.geometry('%dx%d+%d+%d' % (w, h, x, 0))
+
+        self.root.config(bg="skyblue")#, height=800, width=900
 
         self.right_frame = Frame(self.root, bg='grey')
         self.right_frame.pack(side='right', fill='both', padx=10, pady=5, expand=True)
@@ -37,14 +47,48 @@ class Gui:
         self.colors = ('red', 'blue')
         self.brush_width = StringVar(value=2)
         self.clear_width = StringVar(value=20)
-        self.deleted_tag = "delete"  # this for shape moving with the cursor
+        self.deleted_tag = "delete"  # this for the moving shape with the cursor (Paint && Clear)
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
         self.make_left_frame()
         self.make_right_frame()
-        print("hello")
 
+    # save && select
+    def select(self):  # Load images from the computer
+        self.img_path = filedialog.askopenfilename(initialdir=os.getcwd())
+        if self.img_path is not None:
+            self.image = Image.open(self.img_path)
+            print(self.image)
+            self.image = self.image.resize((IMAGE_HIEGHT, IMAGE_WIDTH))
+            self.put_image_in_canvas()
+
+    def save(self):
+        if self.img_path is not None:
+            ext = self.img_path.split(".")[-1]
+            file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[(
+                "All Files", "*.*"), ("PNG file", "*.png"), ("jpg file", "*.jpg")])
+            self.image.save(file)
+
+    def save2(self):
+        if self.img_path is not None:
+            ext = self.img_path.split(".")[-1]
+            file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[(
+                "All Files", "*.*"), ("PNG file", "*.png"), ("jpg file", "*.jpg")])
+
+            border_thickness_bd, highlight_thickness = 2, 1
+            brdt = border_thickness_bd + highlight_thickness
+            # +1 and -2 because of thicknesses of Canvas borders (bd-border and highlight-border):
+            x = self.root.winfo_rootx() + self.right_frame.winfo_x() + self.canvas.winfo_x() + 1 * brdt
+            y = self.root.winfo_rooty() + self.right_frame.winfo_y() + self.canvas.winfo_y() + 1 * brdt
+            # x1 = x + self.canvas.winfo_width() - 2 * brdt
+            # y1 = y + self.canvas.winfo_height() - 2 * brdt
+            img = ImageTk.PhotoImage(self.image)
+            x1 = x + img.width() - 2 * brdt
+            y1 = y + img.height() - 2 * brdt
+            ImageGrab.grab().crop((x, y, x1, y1)).save(file)
+
+    # draw on canvas
     def get_x_and_y(self, event):
         global lasx, lasy
         lasx, lasy = event.x, event.y
@@ -63,6 +107,7 @@ class Gui:
                 if (x - lasx) ** 2 + (lasy - y) ** 2 < w ** 2:
                     self.canvas.delete(line)
         lasx, lasy = event.x, event.y
+        self.cursor_tracker(event)
 
     def cursor_tracker(self, e):
         x, y = e.x, e.y
@@ -84,31 +129,21 @@ class Gui:
 
     def choose(self, c):
         self.choice = c
-        if self.choice == Choice.ROTATE:
-            self.image = self.image_processing.rotate(self.image)
-            self.put_image_in_canvas()  # do not put it out
-        elif self.choice == Choice.TRANSLATE:
-            self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(100, 100))
-            self.put_image_in_canvas()
-        elif self.choice == Choice.SCALE:
-            self.image = self.image_processing.resize(self.image)
-            self.put_image_in_canvas()
+        if self.image is not None:
+            if self.choice == Choice.ROTATE:
+                self.image = self.image_processing.rotate(self.image)
+                self.put_image_in_canvas()  # do not put it out
+            elif self.choice == Choice.TRANSLATE:
+                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(100, 100))
+                self.put_image_in_canvas()
+            elif self.choice == Choice.SCALE:
+                self.image = self.image_processing.resize(self.image)
+                self.put_image_in_canvas()
+            elif self.choice == Choice.SAVE:
+                self.save2()
+            elif self.choice == Choice.SELECT:
+                self.select()
 
-    def select(self):  # Load images from the computer
-
-        self.img_path = filedialog.askopenfilename(initialdir=os.getcwd())
-        if self.img_path is not None:
-            self.image = Image.open(self.img_path)
-            print(self.image)
-            self.image = self.image.resize((IMAGE_HIEGHT, IMAGE_WIDTH))
-            self.put_image_in_canvas()
-
-    def save(self):
-        if self.img_path is not None:
-            ext = self.img_path.split(".")[-1]
-            file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[(
-                "All Files", "*.*"), ("PNG file", "*.png"), ("jpg file", "*.jpg")])
-            self.image.save(file)
 
     def put_image_in_canvas(self):
         self.canvas.delete("image")
@@ -146,7 +181,7 @@ class Gui:
         tool_bar2.pack(side='right', fill='both', padx=5, pady=5, expand=True)
 
         Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar, text="Select", command=self.select).pack(padx=5, pady=5)
+        Button(tool_bar, text="Select", command=lambda: self.choose(Choice.SELECT)).pack(padx=5, pady=5)
         Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
         Button(tool_bar, text="Rotate", command=lambda: self.choose(Choice.ROTATE)).pack(padx=5, pady=5)
         Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
@@ -155,7 +190,7 @@ class Gui:
         Button(tool_bar, text="Translate", command=lambda: self.choose(Choice.TRANSLATE)).pack(padx=5, pady=5)
 
         Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar2, text="Save", command=self.save).pack(padx=5, pady=5)
+        Button(tool_bar2, text="Save", command=lambda: self.choose(Choice.SAVE)).pack(padx=5, pady=5)
         Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)
         Button(tool_bar2, text="Wrap", command=self.clicked).pack(padx=5, pady=5)
         Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)

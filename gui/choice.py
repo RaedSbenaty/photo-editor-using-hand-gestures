@@ -10,3 +10,5 @@ class Choice(Enum):
     SKEW = 5
     PAINT = 6
     CLEAR = 7
+    SAVE = 8
+    SELECT = 9
