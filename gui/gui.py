@@ -180,8 +180,8 @@ class Gui:
         Label(brush_width, text=text, bg='lightgrey', font="Times 18 roman normal") \
             .pack(side='left', padx=5, pady=5)
 
-        Spinbox(brush_width, from_=0, to=30, width=5, textvariable=textvarible, wrap=True,
-                font=Font(family='Times', size=20, weight='normal')).pack(side='left', padx=5, pady=5)
+        Spinbox(brush_width, from_=0, to=30, width=3, textvariable=textvarible, wrap=True,
+                font=Font(family='Times', size=25, weight='normal')).pack(side='left', padx=5, pady=5)
 
     def clear_paint_frame(self):
         for widgets in self.paint_setting_frame.winfo_children():
