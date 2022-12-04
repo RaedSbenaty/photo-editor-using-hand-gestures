@@ -1,3 +1,5 @@
 
 IMAGE_HIEGHT = 380
 IMAGE_WIDTH  = 450
+
+BACKGROUND = "skyblue"

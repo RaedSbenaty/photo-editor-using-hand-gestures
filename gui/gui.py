@@ -5,6 +5,8 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfilename
 from tkinter.colorchooser import askcolor
+from tkinter.font import Font
+
 from PIL import Image, ImageTk, ImageGrab
 
 from choice import Choice
@@ -15,8 +17,7 @@ import imageProcessing
 class Gui:
     root = Tk()
 
-    def __init__(self):
-
+    def root_config(self):
         self.root.title("Image Editor")
         # self.master.maxsize(900, 900)
         screen_width = self.root.winfo_screenwidth()
@@ -28,14 +29,20 @@ class Gui:
         y = (screen_height / 2) - (h / 2)
 
         self.root.geometry('%dx%d+%d+%d' % (w, h, x, 0))
+        self.root.config(bg=BACKGROUND)  # , height=800, width=900
 
-        self.root.config(bg="skyblue")#, height=800, width=900
+    def __init__(self):
+        self.root_config()
 
         self.right_frame = Frame(self.root, bg='grey')
         self.right_frame.pack(side='right', fill='both', padx=10, pady=5, expand=True)
 
         self.canvas = Canvas(self.right_frame, bg='grey')
         self.canvas.pack(fill='both', padx=5, pady=5)
+        self.canvas_setting()
+
+        self.paint_setting_frame = Frame(self.right_frame, bg='lightgrey')
+        self.paint_setting_frame.pack(fill='both', expand=1, padx=5, pady=5)
 
         self.left_frame = Frame(self.root, bg='grey')
         self.left_frame.pack(side='left', fill='both', padx=10, pady=5, expand=True)
@@ -45,14 +52,13 @@ class Gui:
 
         self.choice = Choice.NOTHING
         self.colors = ('red', 'blue')
-        self.brush_width = StringVar(value=2)
+        self.brush_width = StringVar(value=5)
         self.clear_width = StringVar(value=20)
         self.deleted_tag = "delete"  # this for the moving shape with the cursor (Paint && Clear)
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
         self.make_left_frame()
-        self.make_right_frame()
 
     # save && select
     def select(self):  # Load images from the computer
@@ -123,10 +129,6 @@ class Gui:
     def change_color(self):
         self.colors = askcolor(title="Tkinter Color Chooser")
 
-    def clicked(self):
-        '''if button is clicked, display message'''
-        print("Clicked.")
-
     def choose(self, c):
         self.choice = c
         if self.image is not None:
@@ -141,9 +143,13 @@ class Gui:
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
-            elif self.choice == Choice.SELECT:
-                self.select()
+        if self.choice in (Choice.PAINT, Choice.CLEAR):
+            self.put_paint_setting_frame()
+        else:
+            self.clear_paint_frame()
 
+        if self.choice == Choice.SELECT:
+            self.select()
 
     def put_image_in_canvas(self):
         self.canvas.delete("image")
@@ -152,22 +158,34 @@ class Gui:
         self.canvas.create_image(0, 0, image=img, anchor='nw', tag="image")
         self.canvas.image = img
 
-    def make_right_frame(self):
-
+    def canvas_setting(self):
         self.canvas.bind("<Button-1>", self.get_x_and_y)
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.bind('<Motion>', self.cursor_tracker)
-
-        # self.canvas.create_image(0, 0, image=self.image, anchor='nw')
-        self.canvas.pack()
         self.canvas.config(height=IMAGE_HIEGHT + 70, width=IMAGE_WIDTH - 70)
 
-        tool_bar3 = Frame(self.right_frame, bg='lightgrey')
-        tool_bar3.pack(fill='both', expand=1, padx=5, pady=5)
-        Button(tool_bar3, text='Select a Color', command=self.change_color).pack(padx=5, pady=5)
-        # Button(tool_bar3, text=' Delete Line   ', command=self.delete_line).pack(padx=5, pady=5)
-        Spinbox(tool_bar3, from_=0, to=30, textvariable=self.brush_width, wrap=True).pack(padx=5, pady=5)
-        Spinbox(tool_bar3, from_=0, to=30, textvariable=self.clear_width, wrap=True).pack(padx=5, pady=5)
+    def put_paint_setting_frame(self):
+        if len(self.paint_setting_frame.winfo_children()) == 0:
+            Button(self.paint_setting_frame, text='Select a Color', font="Times 15 roman normal",
+                   command=self.change_color) \
+                .pack(padx=5, pady=5)
+
+            self.paint_width_frame(self.paint_setting_frame, "Change brush width", self.brush_width)
+            self.paint_width_frame(self.paint_setting_frame, "Change clear width ", self.clear_width)
+
+    def paint_width_frame(self, frame, text, textvarible):
+        brush_width = Frame(frame, bg='lightgrey')
+        brush_width.pack(fill='both', expand=1, padx=5, pady=5)
+
+        Label(brush_width, text=text, bg='lightgrey', font="Times 18 roman normal") \
+            .pack(side='left', padx=5, pady=5)
+
+        Spinbox(brush_width, from_=0, to=30, width=5, textvariable=textvarible, wrap=True,
+                font=Font(family='Times', size=20, weight='normal')).pack(side='left', padx=5, pady=5)
+
+    def clear_paint_frame(self):
+        for widgets in self.paint_setting_frame.winfo_children():
+            widgets.destroy()
 
     def make_left_frame(self):
         img = Image.open("img.png")
@@ -180,23 +198,19 @@ class Gui:
         tool_bar2 = Frame(self.left_frame, width=90, height=185, bg='lightgrey')
         tool_bar2.pack(side='right', fill='both', padx=5, pady=5, expand=True)
 
-        Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar, text="Select", command=lambda: self.choose(Choice.SELECT)).pack(padx=5, pady=5)
-        Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar, text="Rotate", command=lambda: self.choose(Choice.ROTATE)).pack(padx=5, pady=5)
-        Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar, text="Scale", command=lambda: self.choose(Choice.SCALE)).pack(padx=5, pady=5)
-        Label(tool_bar, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar, text="Translate", command=lambda: self.choose(Choice.TRANSLATE)).pack(padx=5, pady=5)
+        self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
+        self.put_gesture(tool_bar, "Rotate", original_image, Choice.ROTATE)
+        self.put_gesture(tool_bar, "Scale", original_image, Choice.SCALE)
+        self.put_gesture(tool_bar, "Translate", original_image, Choice.TRANSLATE)
 
-        Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar2, text="Save", command=lambda: self.choose(Choice.SAVE)).pack(padx=5, pady=5)
-        Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar2, text="Wrap", command=self.clicked).pack(padx=5, pady=5)
-        Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar2, text="Clear", command=lambda: self.choose(Choice.CLEAR)).pack(padx=5, pady=5)
-        Label(tool_bar2, image=original_image).pack(fill='both', padx=5, pady=5)
-        Button(tool_bar2, text="Paint", command=lambda: self.choose(Choice.PAINT)).pack(padx=5, pady=5)
+        self.put_gesture(tool_bar2, "Save", original_image, Choice.SAVE)
+        self.put_gesture(tool_bar2, "Warp", original_image, Choice.WARP)
+        self.put_gesture(tool_bar2, "Clear", original_image, Choice.CLEAR)
+        self.put_gesture(tool_bar2, "Paint", original_image, Choice.PAINT)
+
+    def put_gesture(self, root, text, image, choice):
+        Label(root, image=image).pack(fill='both', padx=5, pady=5)
+        Button(root, text=text, command=lambda: self.choose(choice)).pack(padx=5, pady=5)
 
 
 def main():
