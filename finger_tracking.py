@@ -3,12 +3,16 @@ import cv2
 
 
 def get_highest_point(contour):
-    out = (float('inf'), float('inf'))
-    for c in contour:
-        if out[1] > c[0][1]:
-            out = c[0]
+    return min(contour, key=lambda c: c[0][1]).squeeze()
 
-    return out
+    # out = (float('inf'), float('inf'))
+    # for c in contour:
+    #     if out[1] > c[0][1]:
+    #         out = c[0]
+
+    # print(res, out)
+
+    # return out
 
 
 #
@@ -40,16 +44,14 @@ def get_highest_point(contour):
 def draw_circles(frame, traverse_point):
     if traverse_point is not None:
         for i in range(len(traverse_point)):
-            cv2.circle(frame, traverse_point[i], int(5 - (5 * i * 3) / 100), [0, 255, 255], -1)
+            cv2.circle(frame, traverse_point[i], int(
+                5 - (5 * i * 3) / 100), [0, 255, 255], -1)
 
 
 def tracking(frame, traverse_point, defects, contour, centroid):
     far_point = get_highest_point(contour)
-    print("farpint", far_point)
-    if len(traverse_point) < 20:
-        traverse_point.append(far_point)
-    else:
+    if len(traverse_point) >= 20:
         traverse_point.pop(0)
-        traverse_point.append(far_point)
 
+    traverse_point.append(far_point)
     draw_circles(frame, traverse_point)

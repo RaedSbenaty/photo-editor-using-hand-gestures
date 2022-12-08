@@ -5,6 +5,11 @@ import math
 kernel = np.ones((3, 3), np.uint8)
 
 
+def closing(img):
+    global kernel
+    return cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+
+
 def opening(img):
     global kernel
     return cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
@@ -45,16 +50,19 @@ def find_center(contour):
 
 def find_defects(contour):
     hull = cv2.convexHull(contour, returnPoints=False)
-    origin_defects = cv2.convexityDefects(contour, hull)
-    some_defects = []
+    original_defects = cv2.convexityDefects(contour, hull)
+    simplified_defects = []
 
-    if origin_defects is not None:
-        for i in range(origin_defects.shape[0]):
-            s, e, f, _ = origin_defects[i, 0]
-            some_defects.append([tuple(contour[s][0]), tuple(
+    if original_defects is not None:
+        for i in range(original_defects.shape[0]):
+            s, e, f, _ = original_defects[i, 0]
+            simplified_defects.append([tuple(contour[s][0]), tuple(
                 contour[e][0]), tuple(contour[f][0])])
 
-    return origin_defects,some_defects
+    return {
+        'original': original_defects,
+        'simplified': simplified_defects
+    }
 
 
 def hand_detection(frame, bgFrame=None):
@@ -66,14 +74,15 @@ def hand_detection(frame, bgFrame=None):
         skin_mask = diff & skin_mask
 
     skin_mask = opening(skin_mask)
+    # skin_mask = closing(skin_mask)
     contour = find_hand_contours(skin_mask)
 
     hull = cv2.convexHull(contour)
     center = find_center(contour)
-    contour = cv2.approxPolyDP( contour, 0.01 * cv2.arcLength(contour, True), True)
-    origin,defects = find_defects(contour)
+    contour = cv2.approxPolyDP(contour, 0.01 * cv2.arcLength(contour, True), True)
+    defects = find_defects(contour)
 
-    return skin_mask, contour, hull, center,origin, defects
+    return skin_mask, contour, hull, center, defects
 
 
 def count_fingers_spaces(defects):
@@ -95,3 +104,56 @@ def count_fingers_spaces(defects):
             counter += 1
 
     return counter, is_space
+
+
+def detect_postures(frame, hull, contour, finger_spaces_counter):
+    # define area of hull and area of hand
+    areahull = cv2.contourArea(hull)
+    areacnt = cv2.contourArea(contour)
+    # find the percentage of area not covered by hand in convex hull
+    arearatio = ((areahull-areacnt)/areacnt)*100
+    # print corresponding gestures which are in their ranges
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    if finger_spaces_counter == 1:
+        if areacnt < 2000:
+            cv2.putText(frame, 'Put hand in the box', (0, 50),
+                        font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+        else:
+            if arearatio < 12:
+                cv2.putText(frame, '0', (0, 50), font, 2,
+                            (0, 0, 255), 3, cv2.LINE_AA)
+            elif arearatio < 17.5:
+                cv2.putText(frame, 'Best of luck', (0, 50),
+                            font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+
+            else:
+                cv2.putText(frame, '1', (0, 50), font, 2,
+                            (0, 0, 255), 3, cv2.LINE_AA)
+
+    elif finger_spaces_counter == 2:
+        cv2.putText(frame, '2', (0, 50), font, 2,
+                    (0, 0, 255), 3, cv2.LINE_AA)
+
+    elif finger_spaces_counter == 3:
+        if arearatio < 27:
+            cv2.putText(frame, '3', (0, 50), font, 2,
+                        (0, 0, 255), 3, cv2.LINE_AA)
+        else:
+            cv2.putText(frame, 'ok', (0, 50), font, 2,
+                        (0, 0, 255), 3, cv2.LINE_AA)
+
+    elif finger_spaces_counter == 4:
+        cv2.putText(frame, '4', (0, 50), font, 2,
+                    (0, 0, 255), 3, cv2.LINE_AA)
+
+    elif finger_spaces_counter == 5:
+        cv2.putText(frame, '5', (0, 50), font, 2,
+                    (0, 0, 255), 3, cv2.LINE_AA)
+
+    elif finger_spaces_counter == 6:
+        cv2.putText(frame, 'reposition', (0, 50), font,
+                    2, (0, 0, 255), 3, cv2.LINE_AA)
+
+    else:
+        cv2.putText(frame, 'reposition', (10, 50), font,
+                    2, (0, 0, 255), 3, cv2.LINE_AA)
