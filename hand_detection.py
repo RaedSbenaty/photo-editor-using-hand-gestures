@@ -45,16 +45,16 @@ def find_center(contour):
 
 def find_defects(contour):
     hull = cv2.convexHull(contour, returnPoints=False)
-    defects = cv2.convexityDefects(contour, hull)
-    result = []
+    origin_defects = cv2.convexityDefects(contour, hull)
+    some_defects = []
 
-    if defects is not None:
-        for i in range(defects.shape[0]):
-            s, e, f, _ = defects[i, 0]
-            result.append([tuple(contour[s][0]), tuple(
+    if origin_defects is not None:
+        for i in range(origin_defects.shape[0]):
+            s, e, f, _ = origin_defects[i, 0]
+            some_defects.append([tuple(contour[s][0]), tuple(
                 contour[e][0]), tuple(contour[f][0])])
 
-    return result
+    return origin_defects,some_defects
 
 
 def hand_detection(frame, bgFrame=None):
@@ -71,9 +71,9 @@ def hand_detection(frame, bgFrame=None):
     hull = cv2.convexHull(contour)
     center = find_center(contour)
     contour = cv2.approxPolyDP( contour, 0.01 * cv2.arcLength(contour, True), True)
-    defects = find_defects(contour)
+    origin,defects = find_defects(contour)
 
-    return skin_mask, contour, hull, center, defects
+    return skin_mask, contour, hull, center,origin, defects
 
 
 def count_fingers_spaces(defects):
