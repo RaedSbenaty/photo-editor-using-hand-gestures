@@ -25,6 +25,10 @@ class Gui:
 
     def root_config(self):
         self.root.title("Image Editor")
+        self.root.bind('s', self.s_press)
+        self.root.bind('t', self.t_press)
+        self.root.bind('z', self.z_press)
+
         # self.master.maxsize(900, 900)
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -39,34 +43,6 @@ class Gui:
 
     def __init__(self):
         self.root_config()
-
-        # image Frame
-        self.right_frame = Frame(self.root, bg='grey')
-        self.right_frame.pack(side='right', fill='both', padx=10, pady=5, expand=True)
-
-        self.canvas = Canvas(self.right_frame, bg='grey')
-        self.canvas.pack(fill='both', padx=5, pady=5)
-        self.canvas_setting()
-
-        self.paint_setting_frame = Frame(self.right_frame, bg='lightgrey')
-        self.paint_setting_frame.pack(fill='both', expand=1, padx=5, pady=5)
-
-        # setting Frame
-        self.left_frame = Frame(self.root, bg='grey',width = 300)
-        self.left_frame.pack(side='left', fill='both', padx=10, pady=5, expand=True)
-        self.make_left_frame()
-
-        # gui variables
-        self.image = None
-        self.img_path = None
-
-        self.choice = Choice.NOTHING
-        self.colors = ('red', 'blue')
-        self.brush_width = StringVar(value=5)
-        self.clear_width = StringVar(value=20)
-        self.deleted_tag = "delete"  # this for the moving shape with the cursor (Paint && Clear)
-        self.lines = []
-        self.image_processing = imageProcessing.ImageProcessing()
 
         # video Frame
         self.video_frame = Frame(self.root, bg='grey')
@@ -90,12 +66,43 @@ class Gui:
         self.posture_queue = Queue(30, Choice.NOTHING)
         self.traverse_point = Queue(30)
         self.bgFrame = None
+        self.frame = None
         self.enable = {
             "mouse": False,
             "tracking": False
         }
         self.get_new_frame()
 
+        # image Frame
+        self.right_frame = Frame(self.root, bg='grey')
+        self.right_frame.pack(side='right', fill='both', padx=10, pady=5, expand=True)
+
+        self.canvas = Canvas(self.right_frame, bg='grey')
+        self.canvas.pack(fill='both', padx=5, pady=5)
+        self.canvas_setting()
+
+        self.paint_setting_frame = Frame(self.right_frame, bg='lightgrey')
+        self.paint_setting_frame.pack(fill='both', expand=1, padx=5, pady=5)
+
+        # setting Frame
+        self.left_frame = Frame(self.root, bg='grey', width=300)
+        self.left_frame.pack(side='left', fill='both', padx=10, pady=5, expand=True)
+        self.make_left_frame()
+
+        # gui variables
+        self.image = None
+        self.img_path = None
+
+        self.choice = Choice.NOTHING
+        self.colors = ('red', 'blue')
+        self.brush_width = StringVar(value=5)
+        self.clear_width = StringVar(value=20)
+        self.deleted_tag = "delete"  # this for the moving shape with the cursor (Paint && Clear)
+        self.lines = []
+        self.image_processing = imageProcessing.ImageProcessing()
+
+    def key_press(self, a):
+        print("gh")
 
     # save && select
     def select(self):  # Load images from the computer
@@ -122,7 +129,7 @@ class Gui:
             border_thickness_bd, highlight_thickness = 2, 1
             brdt = border_thickness_bd + highlight_thickness
             # +1 and -2 because of thicknesses of Canvas borders (bd-border and highlight-border):
-            x = self.root.winfo_rootx() + self.right_frame.winfo_x() + self.canvas.winfo_x() +  brdt
+            x = self.root.winfo_rootx() + self.right_frame.winfo_x() + self.canvas.winfo_x() + brdt
             y = self.root.winfo_rooty() + self.right_frame.winfo_y() + self.canvas.winfo_y() + brdt
             # x1 = x + self.canvas.winfo_width() - 2 * brdt
             # y1 = y + self.canvas.winfo_height() - 2 * brdt
@@ -166,17 +173,17 @@ class Gui:
     def change_color(self):
         self.colors = askcolor(title="Tkinter Color Chooser")
 
-    def choose(self, c,value=None):
+    def choose(self, c, value=None):
         self.choice = c
         if self.image is not None:
             if self.choice == Choice.ROTATE:
-                self.image = self.image_processing.rotate(self.image,value)
+                self.image = self.image_processing.rotate(self.image, value)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
-                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value)#tuple
+                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value)  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
-                self.image = self.image_processing.resize(self.image,value)
+                self.image = self.image_processing.resize(self.image, value)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
@@ -250,27 +257,28 @@ class Gui:
         Button(root, text=text, command=lambda: self.choose(choice)).pack(padx=5, pady=5)
 
     # video frame
+
+    def s_press(self, s):
+        self.enable["mouse"] = not self.enable["mouse"]
+
+    def z_press(self, z):
+        self.bgFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YCrCb)
+
+    def t_press(self,t):
+        self.enable["tracking"] = not self.enable["tracking"]
+        print("hello from t")
+
     def get_new_frame(self):
 
-        frame = self.cap.read()[1]
+        self.frame = self.cap.read()[1]
+        frame = self.frame
         frame = cv2.flip(frame, 1)
         drawing = np.zeros(frame.shape, np.uint8)
-
-        k = cv2.waitKey(10)
-        if k == ord('z'):
-            self.bgFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
-        elif k == ord('s'):
-            self.enable["mouse"] = not self.enable["mouse"]
-            print(self.enable["mouse"])
-        elif k == ord('t'):
-            self.enable["tracking"] = not self.enable["tracking"]
-        elif k & 0xff == 27:
-            self.root.quit()
 
         try:
             skin_mask, contour, hull, center, defects = hand_detection(frame, self.bgFrame)
             # s_mask = skin_mask.copy().resize(200,200)
-            self.show_frame(skin_mask,self.mask_canvas)
+            self.show_frame(skin_mask, self.mask_canvas)
 
             counter, is_space = count_fingers_spaces(defects['simplified'])
 
@@ -288,27 +296,28 @@ class Gui:
             if self.enable["tracking"]:
                 tracking(frame, self.traverse_point, defects['original'], contour, center)
             # todo posture_quueue.append(posture)
-            choise = self.posture_queue.max_value()
-            value = self.traverse_point.first_last_diff()  # todo calculate this
+            # choise = self.posture_queue.max_value()
+            # value = self.traverse_point.first_last_diff()  # todo calculate this
             # gui.choose(choise, value)
         except Exception as e:
             print(e)
             pass
         # drawing=  np.resize(drawing,(200,200))
-        self.show_frames((frame,self.video_canvas),(drawing,self.drawing_canvas))
+        self.show_frames((frame, self.video_canvas), (drawing, self.drawing_canvas))
         # Repeat after an interval to capture continiously
         self.video_canvas.after(5, self.get_new_frame)
 
-    def show_frames(self,*frames):
-        for frame,canvas in frames:
-            self.show_frame(frame,canvas)
+    def show_frames(self, *frames):
+        for frame, canvas in frames:
+            self.show_frame(frame, canvas)
 
-    def show_frame(self,frame,canvas):
+    def show_frame(self, frame, canvas):
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(cv2image)
         imgtk = ImageTk.PhotoImage(image=img)
         canvas.imgtk = imgtk
         canvas.create_image(0, 0, image=imgtk, anchor='nw', tag="image")
+
 
 def main():
     Gui().root.mainloop()
