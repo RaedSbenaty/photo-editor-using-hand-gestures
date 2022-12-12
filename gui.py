@@ -40,25 +40,6 @@ class Gui:
     def __init__(self):
         self.root_config()
 
-        # video Frame
-        self.video_frame = Frame(self.root, bg='grey')
-        self.video_frame.pack(side='right', fill='both', padx=5, pady=5, expand=True)
-
-        self.video_canvas = Canvas(self.video_frame, width=450, height=IMAGE_HIEGHT + 70)
-        self.video_canvas.pack(padx=5, pady=5)
-
-        self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey')
-        self.mask_drawing_frame.pack(fill='both', expand=1, padx=5, pady=5)
-
-        self.mask_canvas = Canvas(self.mask_drawing_frame,width=200)
-        self.mask_canvas.pack(side='left',fill='both',padx=5, pady=5, expand=True)
-
-        self.drawing_canvas = Canvas(self.mask_drawing_frame,width=200)
-        self.drawing_canvas.pack(side='right', fill='both', padx=5, pady=5, expand=True)
-
-        self.cap = cv2.VideoCapture(0)
-        self.get_new_frame()
-
         # image Frame
         self.right_frame = Frame(self.root, bg='grey')
         self.right_frame.pack(side='right', fill='both', padx=10, pady=5, expand=True)
@@ -87,6 +68,24 @@ class Gui:
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
+        # video Frame
+        self.video_frame = Frame(self.root, bg='grey')
+        self.video_frame.pack(side='right', fill='both', padx=5, pady=5, expand=True)
+
+        self.video_canvas = Canvas(self.video_frame, width=450, height=IMAGE_HIEGHT + 70)
+        self.video_canvas.pack(padx=5, pady=5)
+
+        self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey')
+        self.mask_drawing_frame.pack(fill='both', expand=1, padx=5, pady=5)
+
+        self.mask_canvas = Canvas(self.mask_drawing_frame, width=200)
+        self.mask_canvas.pack(side='left', fill='both', padx=5, pady=5, expand=True)
+
+        self.drawing_canvas = Canvas(self.mask_drawing_frame, width=200)
+        self.drawing_canvas.pack(side='right', fill='both', padx=5, pady=5, expand=True)
+
+        self.cap = cv2.VideoCapture(0)
+
         # detection variables
         self.posture_queue = Queue(30, Choice.NOTHING)
         self.traverse_point = Queue(30)
@@ -95,6 +94,7 @@ class Gui:
             "mouse": False,
             "tracking": False
         }
+        self.get_new_frame()
 
 
     # save && select
@@ -261,6 +261,7 @@ class Gui:
             self.bgFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
         elif k == ord('s'):
             self.enable["mouse"] = not self.enable["mouse"]
+            print(self.enable["mouse"])
         elif k == ord('t'):
             self.enable["tracking"] = not self.enable["tracking"]
         elif k & 0xff == 27:
