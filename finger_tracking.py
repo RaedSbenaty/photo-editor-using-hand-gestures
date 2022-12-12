@@ -50,8 +50,5 @@ def draw_circles(frame, traverse_point):
 
 def tracking(frame, traverse_point, defects, contour, centroid):
     far_point = get_highest_point(contour)
-    if len(traverse_point) >= 20:
-        traverse_point.pop(0)
-
     traverse_point.append(far_point)
     draw_circles(frame, traverse_point)

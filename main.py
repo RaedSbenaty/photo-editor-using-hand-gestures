@@ -1,10 +1,11 @@
 from hand_detection import *
 from mouse import *
 from finger_tracking import *
-
+from Queue import *
 
 def main():
-    traverse_point = []
+    posture_queue = Queue(30)
+    traverse_point = Queue(30)
     cap = cv2.VideoCapture(0)
     bgFrame = None
     enable = {
@@ -48,7 +49,8 @@ def main():
                 
             if enable["tracking"]:
                 tracking(frame, traverse_point, defects['original'] , contour, center)
-                
+         # todo posture_quueue.append(posture)
+
         except Exception as e:
             print(e)
             pass
