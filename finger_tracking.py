@@ -42,10 +42,9 @@ def get_highest_point(contour):
 #
 
 def draw_circles(frame, traverse_point):
-    if traverse_point is not None:
-        for i in range(len(traverse_point)):
-            cv2.circle(frame, traverse_point[i], int(
-                5 - (5 * i * 3) / 100), [0, 255, 255], -1)
+    for i in range(len(traverse_point.q)):
+        cv2.circle(frame, traverse_point[i], int(
+            5 - (5 * i * 3) / 100), [0, 255, 255], -1)
 
 
 def tracking(frame, traverse_point, defects, contour, centroid):

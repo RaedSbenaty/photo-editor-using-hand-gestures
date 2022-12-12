@@ -1,10 +1,17 @@
+from threading import Thread
+
+from choice import Choice
+from gui import Gui
 from hand_detection import *
 from mouse import *
 from finger_tracking import *
 from Queue import *
 
 def main():
-    posture_queue = Queue(30)
+    # gui = Gui()
+    # gui_root = gui.root
+    # Thread(target = gui_root.mainloop).start()
+    posture_queue = Queue(30,Choice.NOTHING)
     traverse_point = Queue(30)
     cap = cv2.VideoCapture(0)
     bgFrame = None
@@ -50,7 +57,9 @@ def main():
             if enable["tracking"]:
                 tracking(frame, traverse_point, defects['original'] , contour, center)
          # todo posture_quueue.append(posture)
-
+            choise = posture_queue.max_value()
+            value = traverse_point.first_last_diff()# todo calculate this
+            # gui.choose(choise,value )
         except Exception as e:
             print(e)
             pass
