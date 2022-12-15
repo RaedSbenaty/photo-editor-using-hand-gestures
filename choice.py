@@ -12,3 +12,6 @@ class Choice(Enum):
     CLEAR = 7
     SAVE = 8
     SELECT = 9
+    CLICK = 10 
+    SIZE_INC = 11 
+    SIZE_DEC = 12
