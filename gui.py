@@ -67,7 +67,7 @@ class Gui:
 
         # detection variables
         self.posture_queue = Queue(30, Choice.NOTHING)
-        self.traverse_point = Queue(30)
+        self.traverse_point = Queue(15)
         self.bgFrame = None
         self.frame = None
         self.enable = {
@@ -77,19 +77,19 @@ class Gui:
         self.get_new_frame()
 
         # image Frame
-        self.right_frame = Frame(self.root, bg='grey')
-        self.right_frame.pack(side='right', fill='both', padx=10, pady=5, expand=True)
+        self.image_frame = Frame(self.root, bg='grey',width= IMAGE_WIDTH)
+        self.image_frame.pack(side='right', fill='both', padx=10, pady=5)
 
-        self.canvas = Canvas(self.right_frame, bg='grey')
+        self.canvas = Canvas(self.image_frame, bg='grey')
         self.canvas.pack(fill='both', padx=5, pady=5)
         self.canvas_setting()
 
-        self.paint_setting_frame = Frame(self.right_frame, bg='lightgrey')
+        self.paint_setting_frame = Frame(self.image_frame, bg='lightgrey')
         self.paint_setting_frame.pack(fill='both', expand=1, padx=5, pady=5)
 
         # setting Frame
-        self.left_frame = Frame(self.root, bg='grey', width=300)
-        self.left_frame.pack(side='left', fill='both', padx=10, pady=5, expand=True)
+        self.setting_frame = Frame(self.root, bg='grey', width=300)
+        self.setting_frame.pack(side='left', fill='both', padx=10, pady=5, expand=True)
         self.make_left_frame()
 
         # gui variables
@@ -112,7 +112,7 @@ class Gui:
         self.img_path = filedialog.askopenfilename(initialdir=os.getcwd())
         if self.img_path is not None:
             self.image = Image.open(self.img_path)
-            print(self.image)
+            # print(self.image)
             self.image = self.image.resize((IMAGE_HIEGHT, IMAGE_WIDTH))
             self.put_image_in_canvas()
 
@@ -132,8 +132,8 @@ class Gui:
             border_thickness_bd, highlight_thickness = 2, 1
             brdt = border_thickness_bd + highlight_thickness
             # +1 and -2 because of thicknesses of Canvas borders (bd-border and highlight-border):
-            x = self.root.winfo_rootx() + self.right_frame.winfo_x() + self.canvas.winfo_x() + brdt
-            y = self.root.winfo_rooty() + self.right_frame.winfo_y() + self.canvas.winfo_y() + brdt
+            x = self.root.winfo_rootx() + self.image_frame.winfo_x() + self.canvas.winfo_x() + brdt
+            y = self.root.winfo_rooty() + self.image_frame.winfo_y() + self.canvas.winfo_y() + brdt
             # x1 = x + self.canvas.winfo_width() - 2 * brdt
             # y1 = y + self.canvas.winfo_height() - 2 * brdt
             img = ImageTk.PhotoImage(self.image)
@@ -239,10 +239,10 @@ class Gui:
         original_image = img.resize((100, 100))
         original_image = ImageTk.PhotoImage(original_image)
 
-        tool_bar = Frame(self.left_frame, width=90, height=185, bg='lightgrey')
+        tool_bar = Frame(self.setting_frame, width=90, height=185, bg='lightgrey')
         tool_bar.pack(side='left', fill='both', padx=5, pady=5, expand=True)
 
-        tool_bar2 = Frame(self.left_frame, width=90, height=185, bg='lightgrey')
+        tool_bar2 = Frame(self.setting_frame, width=90, height=185, bg='lightgrey')
         tool_bar2.pack(side='right', fill='both', padx=5, pady=5, expand=True)
 
         self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
@@ -292,7 +292,7 @@ class Gui:
 
             if self.enable["mouse"]:
                 *s, _ = self.frame.shape
-                move_mouse(center, s)
+                move_mouse(get_highest_point(contour), s)
 
             if self.enable["tracking"]:
                 tracking(self.frame, self.traverse_point, defects['original'], contour, center)
