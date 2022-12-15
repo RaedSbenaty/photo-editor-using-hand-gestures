@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 import math
 
+from posture import Posture
+from utils import *
+
 kernel = np.ones((3, 3), np.uint8)
 
 
@@ -18,16 +21,16 @@ def opening(img):
 def generate_skin_mask(img):
     ycbcr = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     _, CR, CB = cv2.split(ycbcr)
-    cb_6_cr = CB + 0.6*CR
+    cb_6_cr = CB + 0.6 * CR
     mask = (137 < CR) & (CR < 177) & (77 < CB) & (
-        CB < 127) & (190 < cb_6_cr) & (cb_6_cr < 215)
+            CB < 127) & (190 < cb_6_cr) & (cb_6_cr < 215)
     return mask.astype(np.uint8) * 255
 
 
 def ycbcr_substract(img1, img):
     diff = cv2.absdiff(img1, img)
     diff = diff[:, :, 1] + diff[:, :, 2]
-    diff = (diff >= 10)*255
+    diff = (diff >= 10) * 255
     return diff.astype(np.uint8)
 
 
@@ -86,18 +89,18 @@ def hand_detection(frame, bgFrame=None):
 
 
 def count_fingers_spaces(defects):
-    counter = 0
-    is_space = [False]*len(defects)
+    counter = len(defects) > 0
+    is_space = [False] * len(defects)
 
     for i, (start, end, far) in enumerate(defects):
-        a = math.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
-        b = math.sqrt((far[0] - start[0])**2 + (far[1] - start[1])**2)
-        c = math.sqrt((end[0] - far[0])**2 + (end[1] - far[1])**2)
-        s = (a+b+c)/2
+        a = math.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2)
+        b = math.sqrt((far[0] - start[0]) ** 2 + (far[1] - start[1]) ** 2)
+        c = math.sqrt((end[0] - far[0]) ** 2 + (end[1] - far[1]) ** 2)
+        s = (a + b + c) / 2
 
-        ar = math.sqrt(s*(s-a)*(s-b)*(s-c))
-        d = (2*ar)/a
-        angle = math.acos((b**2 + c**2 - a**2)/(2*b*c)) * 57
+        ar = math.sqrt(s * (s - a) * (s - b) * (s - c))
+        d = (2 * ar) / a
+        angle = math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c)) * 57
 
         if angle <= 90 and d > 30:
             is_space[i] = True
@@ -111,7 +114,7 @@ def detect_postures(frame, hull, contour, finger_spaces_counter):
     areahull = cv2.contourArea(hull)
     areacnt = cv2.contourArea(contour)
     # find the percentage of area not covered by hand in convex hull
-    arearatio = ((areahull-areacnt)/areacnt)*100
+    arearatio = ((areahull - areacnt) / areacnt) * 100
     # print corresponding gestures which are in their ranges
     font = cv2.FONT_HERSHEY_SIMPLEX
     if finger_spaces_counter == 1:
@@ -157,3 +160,67 @@ def detect_postures(frame, hull, contour, finger_spaces_counter):
     else:
         cv2.putText(frame, 'reposition', (10, 50), font,
                     2, (0, 0, 255), 3, cv2.LINE_AA)
+
+
+def detect_postures(frame, hull, contour, center, defects):
+    finger_spaces_counter, is_space = count_fingers_spaces(defects)
+
+    if finger_spaces_counter == 0:
+        return Posture.ZERO
+
+    center = np.array(center)
+    left = get_leftmost_point(hull)
+    right = get_rightmost_point(hull)
+    up = get_highest_point(hull)
+    down = get_lowest_point(hull)
+    opened_defectes = [np.array(d[2]) for d, _ in filter(
+        lambda s: s[1], zip(defects, is_space))]
+
+    # cv2.circle(frame, right, 7, [0, 255, 255], 2)
+
+    if finger_spaces_counter == 1:
+        areahull = cv2.contourArea(hull)
+        areacnt = cv2.contourArea(contour)
+        arearatio = ((areahull - areacnt) / areacnt) * 100
+        # if arearatio < 17.5:
+        #     return Posture.ONE_OK
+
+        return Posture.ONE_NORMAL
+
+    if finger_spaces_counter == 2:
+        nearest_point = cos_similarity(opened_defectes[0], left, right, center)
+        if (nearest_point == opened_defectes[0]).all():
+            return Posture.TWO_MIDDLE
+        return Posture.TWO_LEFT if (nearest_point == right).all() else Posture.TWO_RIGHT
+
+        # distance_to_left = abs(opened_defectes[0][0]-left[0])
+        # distance_to_right = abs(opened_defectes[0][0]-right[0])
+        # distance_to_center = abs(opened_defectes[0][0]-center[0])
+
+        # mini = min(distance_to_left, distance_to_right, distance_to_center)
+
+        # if mini == distance_to_left:
+        #     return Posture.TWO_LEFT
+        # if mini == distance_to_right:
+        #     return Posture.TWO_RIGHT
+        # else:
+        #     return Posture.TWO_MIDDLE
+
+    if finger_spaces_counter == 3:
+        if opened_defectes[0][0] < center[0] and opened_defectes[1][0] < center[0]:
+            return Posture.THREE_LEFT
+        elif opened_defectes[0][0] > center[0] and opened_defectes[1][0] > center[0]:
+            return Posture.THREE_RIGHT
+        else:
+            return Posture.THREE_MIDDLE
+
+    if finger_spaces_counter == 4:
+        return Posture.FOUR
+
+    if finger_spaces_counter == 5:
+        if sum([int(c[0] < center[0]) for c in opened_defectes]) >= 3:
+            return Posture.FIVE_RIGHT_SIDE
+        if sum([int(c[0] > center[0]) for c in opened_defectes]) >= 3:
+            return Posture.FIVE_LEFT_SIDE
+        lowest = max(opened_defectes, key=lambda c: c[1])
+        return Posture.FIVE_RIGHT if lowest[0] < center[0] else Posture.FIVE_LEFT

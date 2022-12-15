@@ -283,6 +283,12 @@ class Gui:
             # cv2.imshow("skin", skin_mask)
             counter, is_space = count_fingers_spaces(defects['simplified'])
 
+            res = detect_postures(self.frame, hull, contour, center,
+                                  defects['simplified'])
+
+            cv2.putText(self.frame, str(res), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                        1, (0, 0, 255), 2, cv2.LINE_AA)
+
             cv2.drawContours(drawing, [contour, hull], -1, (0, 255, 0), 2)
             cv2.circle(self.frame, center, 5, [0, 0, 255], 2)
             for i, (start, end, far) in enumerate(defects['simplified']):
