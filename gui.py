@@ -19,6 +19,9 @@ from hand_detection import *
 from mouse import *
 from finger_tracking import *
 
+FRAME_WIDTH = int(640 * 3 / 4)
+FRAME_HEIGHT = int(480 / 2)
+
 
 class Gui:
     root = Tk()
@@ -46,19 +49,19 @@ class Gui:
 
         # video Frame
         self.video_frame = Frame(self.root, bg='grey')
-        self.video_frame.pack(side='right', fill='both', padx=5, pady=5, expand=True)
+        self.video_frame.pack(side='right', padx=5, pady=5)
 
-        self.video_canvas = Canvas(self.video_frame, width=450, height=IMAGE_HIEGHT + 70)
+        self.video_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
         self.video_canvas.pack(padx=5, pady=5)
 
-        self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey')
-        self.mask_drawing_frame.pack(fill='both', expand=1, padx=5, pady=5)
+        # self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey')
+        # self.mask_drawing_frame.pack(fill='both', expand=1, padx=5, pady=5)
 
-        self.mask_canvas = Canvas(self.mask_drawing_frame, width=200)
-        self.mask_canvas.pack(side='left', fill='both', padx=5, pady=5, expand=True)
+        self.mask_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
+        self.mask_canvas.pack(padx=5, pady=5)
 
-        self.drawing_canvas = Canvas(self.mask_drawing_frame, width=200)
-        self.drawing_canvas.pack(side='right', fill='both', padx=5, pady=5, expand=True)
+        self.drawing_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
+        self.drawing_canvas.pack(padx=5, pady=5)
 
         self.cap = cv2.VideoCapture(0)
 
@@ -263,34 +266,32 @@ class Gui:
 
     def z_press(self, z):
         self.bgFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YCrCb)
-
-    def t_press(self,t):
+    
+    def t_press(self, t):
         self.enable["tracking"] = not self.enable["tracking"]
-        print("hello from t")
 
     def get_new_frame(self):
 
         self.frame = self.cap.read()[1]
-        frame = self.frame
-        frame = cv2.flip(frame, 1)
-        drawing = np.zeros(frame.shape, np.uint8)
+        frame = cv2.flip(self.frame, 1)
+        drawing = np.zeros(self.frame.shape, np.uint8)
 
         try:
-            skin_mask, contour, hull, center, defects = hand_detection(frame, self.bgFrame)
-            # s_mask = skin_mask.copy().resize(200,200)
-            self.show_frame(skin_mask, self.mask_canvas)
-
+            skin_mask, contour, hull, center, defects = hand_detection(self.frame, self.bgFrame)
+            s_mask = cv2.resize(skin_mask, (FRAME_WIDTH, FRAME_HEIGHT))
+            self.show_frame(s_mask, self.mask_canvas)
+            cv2.imshow("skin", skin_mask)
             counter, is_space = count_fingers_spaces(defects['simplified'])
 
             cv2.drawContours(drawing, [contour, hull], -1, (0, 255, 0), 2)
-            cv2.circle(frame, center, 5, [0, 0, 255], 2)
+            cv2.circle(self.frame, center, 5, [0, 0, 255], 2)
             for i, (start, end, far) in enumerate(defects['simplified']):
-                cv2.line(frame, start, end, [0, 255, 0], 2)
+                cv2.line(self.frame, start, end, [0, 255, 0], 2)
                 color = [255, 0, 0] if is_space[i] else [0, 0, 255]
-                cv2.circle(frame, far, 5, color, -1)
+                cv2.circle(self.frame, far, 5, color, -1)
 
             if self.enable["mouse"]:
-                *s, _ = frame.shape
+                *s, _ = self.frame.shape
                 move_mouse(center, s)
 
             if self.enable["tracking"]:
@@ -302,8 +303,10 @@ class Gui:
         except Exception as e:
             print(e)
             pass
-        # drawing=  np.resize(drawing,(200,200))
-        self.show_frames((frame, self.video_canvas), (drawing, self.drawing_canvas))
+
+        drawing = cv2.resize(drawing, (FRAME_WIDTH, FRAME_HEIGHT))
+        frm = cv2.resize(self.frame, (FRAME_WIDTH, FRAME_HEIGHT))
+        self.show_frames((frm, self.video_canvas), (drawing, self.drawing_canvas))
         # Repeat after an interval to capture continiously
         self.video_canvas.after(5, self.get_new_frame)
 
