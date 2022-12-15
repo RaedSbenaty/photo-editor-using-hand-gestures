@@ -20,7 +20,7 @@ from mouse import *
 from finger_tracking import *
 
 FRAME_WIDTH = int(640 * 3 / 4)
-FRAME_HEIGHT = int(480 / 2)
+FRAME_HEIGHT = int(480 * 3 / 4)
 
 
 class Gui:
@@ -31,7 +31,7 @@ class Gui:
         self.root.bind('s', self.s_press)
         self.root.bind('t', self.t_press)
         self.root.bind('z', self.z_press)
-
+        # self.root.attributes("-zoomed",True)
         # self.master.maxsize(900, 900)
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -41,7 +41,7 @@ class Gui:
         x = (screen_width / 2) - (w / 2)
         y = (screen_height / 2) - (h / 2)
 
-        self.root.geometry('%dx%d+%d+%d' % (w, h, x, 0))
+        self.root.geometry('%dx%d+%d+%d' % (screen_width, screen_height - 70, 0, 0))
         self.root.config(bg=BACKGROUND)  # , height=800, width=900
 
     def __init__(self):
@@ -54,14 +54,14 @@ class Gui:
         self.video_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
         self.video_canvas.pack(padx=5, pady=5)
 
-        # self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey')
-        # self.mask_drawing_frame.pack(fill='both', expand=1, padx=5, pady=5)
+        self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey', width=FRAME_WIDTH, height=FRAME_HEIGHT)
+        self.mask_drawing_frame.pack(padx=5, pady=5)
 
-        self.mask_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
-        self.mask_canvas.pack(padx=5, pady=5)
+        self.mask_canvas = Canvas(self.mask_drawing_frame, width=250, height=250)
+        self.mask_canvas.pack(side='left', fill='both', expand=True, padx=5, pady=5)
 
-        self.drawing_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
-        self.drawing_canvas.pack(padx=5, pady=5)
+        self.drawing_canvas = Canvas(self.mask_drawing_frame, width=250, height=250)
+        self.drawing_canvas.pack(side='right', fill='both', expand=True, padx=5, pady=5)
 
         self.cap = cv2.VideoCapture(0)
 
@@ -266,21 +266,21 @@ class Gui:
 
     def z_press(self, z):
         self.bgFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YCrCb)
-    
+
     def t_press(self, t):
         self.enable["tracking"] = not self.enable["tracking"]
 
     def get_new_frame(self):
 
         self.frame = self.cap.read()[1]
-        frame = cv2.flip(self.frame, 1)
+        self.frame = cv2.flip(self.frame, 1)
         drawing = np.zeros(self.frame.shape, np.uint8)
 
         try:
             skin_mask, contour, hull, center, defects = hand_detection(self.frame, self.bgFrame)
-            s_mask = cv2.resize(skin_mask, (FRAME_WIDTH, FRAME_HEIGHT))
+            s_mask = cv2.resize(skin_mask, (250, 250))
             self.show_frame(s_mask, self.mask_canvas)
-            cv2.imshow("skin", skin_mask)
+            # cv2.imshow("skin", skin_mask)
             counter, is_space = count_fingers_spaces(defects['simplified'])
 
             cv2.drawContours(drawing, [contour, hull], -1, (0, 255, 0), 2)
@@ -295,7 +295,7 @@ class Gui:
                 move_mouse(center, s)
 
             if self.enable["tracking"]:
-                tracking(frame, self.traverse_point, defects['original'], contour, center)
+                tracking(self.frame, self.traverse_point, defects['original'], contour, center)
             # todo posture_quueue.append(posture)
             # choise = self.posture_queue.max_value()
             # value = self.traverse_point.first_last_diff()  # todo calculate this
@@ -304,7 +304,7 @@ class Gui:
             print(e)
             pass
 
-        drawing = cv2.resize(drawing, (FRAME_WIDTH, FRAME_HEIGHT))
+        drawing = cv2.resize(drawing, (250, 250))
         frm = cv2.resize(self.frame, (FRAME_WIDTH, FRAME_HEIGHT))
         self.show_frames((frm, self.video_canvas), (drawing, self.drawing_canvas))
         # Repeat after an interval to capture continiously
