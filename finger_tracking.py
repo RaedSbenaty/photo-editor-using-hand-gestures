@@ -43,7 +43,7 @@ def get_highest_point(contour):
 
 def draw_circles(frame, traverse_point):
     for i in range(len(traverse_point.q)):
-        cv2.circle(frame, traverse_point[i], int(
+        cv2.circle(frame, traverse_point.q[i], int(
             5 - (5 * i * 3) / 100), [0, 255, 255], -1)
 
 
