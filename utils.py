@@ -38,9 +38,7 @@ def cnv2angle(x):
 
 def cos_similarity(point, left, right, center) -> np.ndarray:
     cos = vector_cos(point - center, np.array([1, 0]))
-    angle = math.acos(cos)
     if abs(cos) < 0.9:
-        print(cnv2angle(math.acos(cos)))
         return point
 
     pc = point - center
@@ -49,7 +47,7 @@ def cos_similarity(point, left, right, center) -> np.ndarray:
     return left if cos1 > cos2 else right
 
 
-print(cnv2angle(math.acos(0.9)))
+# print(cnv2angle(math.acos(0.9)))
 
 kernel = np.ones((3, 3), np.uint8)
 
