@@ -6,7 +6,7 @@ from tkinter import filedialog
 from tkinter.filedialog import asksaveasfilename
 from tkinter.colorchooser import askcolor
 from tkinter.font import Font
-
+import traceback
 from PIL import Image, ImageTk, ImageGrab
 
 from Queue import Queue
@@ -16,7 +16,8 @@ import imageProcessing
 from hand_detection import *
 from mouse import *
 from finger_tracking import *
-
+from motion_direction import * 
+from input_mapper import *
 
 class Gui:
     root = Tk()
@@ -59,9 +60,11 @@ class Gui:
 
         # detection variables
         self.posture_queue = Queue(30, Choice.NOTHING)
-        self.traverse_point = Queue(15)
+        self.traverse_point = Queue(15,(0,0))
         self.bgFrame = None
         self.frame = None
+        self.frame_counter = 0
+        self.input_mapper = Input_Mapper()
         self.enable = {
             "mouse": False,
             "tracking": False
@@ -278,7 +281,7 @@ class Gui:
         self.frame = self.cap.read()[1]
         self.frame = cv2.flip(self.frame, 1)
         drawing = np.zeros(self.frame.shape, np.uint8)
-
+        self.frame_counter += 1 
         try:
             skin_mask, contour, hull, center, defects = hand_detection(self.frame, self.bgFrame)
             s_mask = cv2.resize(skin_mask, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
@@ -288,8 +291,9 @@ class Gui:
 
             res = detect_postures(self.frame, hull, contour, center,
                                   defects['simplified'])
+            self.posture_queue.append(res)
 
-            cv2.putText(self.frame, str(res), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
+            cv2.putText(self.frame, str(self.posture_queue.max_value()), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 0, 255), 2, cv2.LINE_AA)
 
             cv2.drawContours(drawing, [contour, hull], -1, (0, 255, 0), 2)
@@ -306,11 +310,14 @@ class Gui:
 
             if self.enable["tracking"]:
                 tracking(self.frame, self.traverse_point, defects['original'], contour, center)
-            # todo posture_quueue.append(posture)
-            # choise = self.posture_queue.max_value()
-            # value = self.traverse_point.first_last_diff()  # todo calculate this
-            # gui.choose(choise, value)
+            if self.frame_counter %30 == 0:
+                posture = self.posture_queue.max_value()
+                choice = self.input_mapper.map(posture)
+                value = get_direction_from(self.traverse_point)
+                print(f"{choice=},{value=}")
+                #self.choose(choice, value)
         except Exception as e:
+            #traceback.print_exc()
             print(e)
             pass
 
