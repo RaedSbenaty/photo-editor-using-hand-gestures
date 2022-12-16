@@ -3,10 +3,10 @@ from Queue import Queue
 
 
 class Directions(Enum):
-    LEFT = "left"
-    RIGHT = "right"
-    UP = "up"
-    DOWN = "Down"
+    LEFT = -1 
+    RIGHT = 1
+    UP = 1
+    DOWN = -1
 
 
 def get_direction_from(q: Queue):
