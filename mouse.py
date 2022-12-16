@@ -32,5 +32,5 @@ def click_state(state: Directions):
     elif state is Directions.UP:
         pyautogui.mouseUp(button="left")
 
-
-scroll(Directions.UP)
+def single_click(): # we can also call : click_state(Down) click_state(Up) to perform a click 
+    pyautogui.click(button="left")
