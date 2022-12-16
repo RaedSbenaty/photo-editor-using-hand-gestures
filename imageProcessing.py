@@ -29,13 +29,12 @@ class ImageProcessing:
         e = cosine / sy
         f = y - nx * d - ny * e
         # print(image.size)
-        return image.transform((IMAGE_HIEGHT, IMAGE_WIDTH), Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
+        return image.transform((IMAGE_WIDTH, IMAGE_HIEGHT), Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
 
-    def resize(self, img, value):
-        imgg = ImageTk.PhotoImage(img)
-
-        w, h = imgg.width(), imgg.height()
-        img = img.resize((w * value, h * value))
+    def scale(self, img, value):
+        imgTK = ImageTk.PhotoImage(img)
+        w, h = imgTK.width(), imgTK.height()
+        img = img.resize((int(w * value), int(h * value)))
         return img
 
     def shear(self, img: Image, angles=(0, 0)) -> Image:
