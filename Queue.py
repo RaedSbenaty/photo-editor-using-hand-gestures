@@ -28,6 +28,3 @@ class Queue:
 
 
 q = Queue(20)
-
-print(q.max_value())
-print(q.first_last_diff())

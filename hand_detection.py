@@ -34,12 +34,23 @@ def ycbcr_substract(img1, img):
     return diff.astype(np.uint8)
 
 
+def contour_filter(contour):
+    width = get_rightmost_point(contour)[0] - get_leftmost_point(contour)[0]
+    height = get_lowest_point(contour)[1] - get_highest_point(contour)[1]
+    ratio = width/height
+    return ratio > 0.4 and ratio < 1.7 and cv2.contourArea(contour) > 7000
+
+
 def find_hand_contours(mask):
     contours, _ = cv2.findContours(
         mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    contours = list(filter(contour_filter, contours))
     if len(contours) == 0:
         return None
-    return max(contours, key=lambda c: cv2.contourArea(c))
+
+    result = max(contours, key=lambda c: cv2.contourArea(c))
+    return result
 
 
 def find_center(contour):
@@ -68,7 +79,11 @@ def find_defects(contour):
     }
 
 
+# mini, maxi = float('inf'), -1
+
+
 def hand_detection(frame, bgFrame=None):
+    # global mini, maxi
     skin_mask = generate_skin_mask(frame)
 
     if bgFrame is not None:
@@ -76,11 +91,22 @@ def hand_detection(frame, bgFrame=None):
         diff = ycbcr_substract(ycrcb_frame, bgFrame)
         skin_mask = diff & skin_mask
 
-    skin_mask = opening(skin_mask)
-    # skin_mask = closing(skin_mask)
+    # skin_mask = opening(skin_mask)
+    skin_mask = closing(skin_mask)
     contour = find_hand_contours(skin_mask)
 
     hull = cv2.convexHull(contour)
+
+    # k = cv2.waitKey(10)
+    # if k == ord('h'):
+    # width = get_rightmost_point(hull)[0] - get_leftmost_point(hull)[0]
+    # height = get_lowest_point(hull)[1] - get_highest_point(hull)[1]
+    # ratio = width/height
+    # area = cv2.contourArea(hull)
+    # mini = min(mini, width/height)
+    # maxi = max(maxi, width/height)
+    # print(mini, maxi)
+
     center = find_center(contour)
     contour = cv2.approxPolyDP(
         contour, 0.015 * cv2.arcLength(contour, True), True)
@@ -123,7 +149,6 @@ def detect_postures(frame, hull, contour, center, defects):
     down = get_lowest_point(hull)
     opened_defectes = [np.array(d[2]) for d, _ in filter(
         lambda s: s[1], zip(defects, is_space))]
-    print(opened_defectes)
     # cv2.circle(frame, right, 7, [0, 255, 255], 2)
 
     if finger_spaces_counter == 1:
