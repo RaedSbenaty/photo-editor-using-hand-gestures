@@ -123,7 +123,7 @@ def detect_postures(frame, hull, contour, center, defects):
     down = get_lowest_point(hull)
     opened_defectes = [np.array(d[2]) for d, _ in filter(
         lambda s: s[1], zip(defects, is_space))]
-    print(opened_defectes)
+    # print(opened_defectes)
     # cv2.circle(frame, right, 7, [0, 255, 255], 2)
 
     if finger_spaces_counter == 1:

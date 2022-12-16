@@ -82,7 +82,7 @@ class Gui:
         # setting Frame
         self.setting_frame = Frame(self.root, bg=BACKGROUND3, width=300)
         self.setting_frame.pack(side='left', fill='both', padx=5, pady=5)
-        self.make_left_frame()
+        self.setting_frame_widgets()
 
         # gui variables
         self.image = None
@@ -96,9 +96,11 @@ class Gui:
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
+        self.save_counter = 1
+
     # save && select
     def select(self):  # Load images from the computer
-        self.img_path = filedialog.askopenfilename(initialdir=os.getcwd())
+        self.img_path = filedialog.askopenfilename(initialdir=os.getcwd() + "/images")
         if self.img_path is not None:
             self.image = Image.open(self.img_path)
             # print(self.image)
@@ -114,20 +116,23 @@ class Gui:
 
     def save2(self):
         if self.img_path is not None:
-            ext = self.img_path.split(".")[-1]
-            file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[(
-                "All Files", "*.*"), ("PNG file", "*.png"), ("jpg file", "*.jpg")])
+            # ext = self.img_path.split(".")[-1]
+            # file = asksaveasfilename(defaultextension=f".{ext}", filetypes=[(
+            #     "All Files", "*.*"), ("PNG file", "*.png"), ("jpg file", "*.jpg")])
+
+            file = f"images/save{self.save_counter}.png"
+            self.save_counter += 1
 
             border_thickness_bd, highlight_thickness = 2, 1
             brdt = border_thickness_bd + highlight_thickness
             # +1 and -2 because of thicknesses of Canvas borders (bd-border and highlight-border):
             x = self.root.winfo_rootx() + self.image_frame.winfo_x() + self.canvas.winfo_x() + brdt
             y = self.root.winfo_rooty() + self.image_frame.winfo_y() + self.canvas.winfo_y() + brdt
-            # x1 = x + self.canvas.winfo_width() - 2 * brdt
-            # y1 = y + self.canvas.winfo_height() - 2 * brdt
+
             img = ImageTk.PhotoImage(self.image)
-            x1 = x + img.width() - 2 * brdt
-            y1 = y + img.height() - 2 * brdt
+            width, height = (img.width(), img.height()) if IMAGE_WIDTH > img.width() else (IMAGE_WIDTH, IMAGE_HIEGHT)
+            x1 = x + width - 2 * brdt
+            y1 = y + height - 2 * brdt
             ImageGrab.grab().crop((x, y, x1, y1)).save(file)
 
     # draw on canvas
@@ -169,18 +174,19 @@ class Gui:
         self.choice = c
         if self.image is not None:
             if self.choice == Choice.ROTATE:
-                self.image = self.image_processing.rotate(self.image,value if value else 180)
+                self.image = self.image_processing.rotate(self.image, value if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
-                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value if value else (80,80))  # tuple
+                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value if value else (
+                    80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
-                self.image = self.image_processing.resize(self.image,value if value else 0.8)
+                self.image = self.image_processing.scale(self.image, value if value else 0.8)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
             elif self.choice == Choice.SKEW:
-                self.image = self.image_processing.shear(self.image,value if value else (0,130))
+                self.image = self.image_processing.shear(self.image, value if value else (0, 130))
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
         else:
@@ -209,22 +215,22 @@ class Gui:
             self.paint_width_frame(self.paint_setting_frame, "Change brush width", self.brush_width)
             self.paint_width_frame(self.paint_setting_frame, "Change clear width ", self.clear_width)
 
-    def paint_width_frame(self, frame, text, textvarible):
-        brush_width = Frame(frame, bg='lightgrey')
+    def paint_width_frame(self, frame, text, text_variable):
+        brush_width = Frame(frame, bg=BACKGROUND2)
         brush_width.pack(fill='both', expand=1, padx=5, pady=5)
 
-        Label(brush_width, text=text, bg='lightgrey', font="Times 18 roman normal") \
+        Label(brush_width, text=text, bg=BACKGROUND2, font="Times 18 roman normal") \
             .pack(side='left', padx=5, pady=5)
 
-        Spinbox(brush_width, from_=0, to=30, width=3, textvariable=textvarible, wrap=True,
+        Spinbox(brush_width, from_=0, to=30, width=3, textvariable=text_variable, wrap=True,
                 font=Font(family='Times', size=25, weight='normal')).pack(side='left', padx=5, pady=5)
 
     def clear_paint_frame(self):
         for widgets in self.paint_setting_frame.winfo_children():
             widgets.destroy()
 
-    def make_left_frame(self):
-        img = Image.open("img.png")
+    def setting_frame_widgets(self):
+        img = Image.open("images/img.png")
         original_image = img.resize((100, 100))
         original_image = ImageTk.PhotoImage(original_image)
 
