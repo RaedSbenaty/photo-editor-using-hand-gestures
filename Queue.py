@@ -3,7 +3,7 @@ from collections import Counter
 
 
 class Queue:
-    def __init__(self, size,default_value=None):
+    def __init__(self, size, default_value=None):
         self.q = []
         self.size = size
         self.default_value = default_value
@@ -21,10 +21,12 @@ class Queue:
             c[value] = c.get(value, 0) + 1
         return max(c.items(), key=operator.itemgetter(1))[0]
 
-    def first_last_diff(self):
+    def get_first_last(self):
         if len(self.q) == 0:
-            return self.default_value
-        return self.q[0] - self.q[-1]
+            return self.default_value,self.default_value
+        return self.q[0], self.q[-1]
 
 
 q = Queue(20)
+
+print(q.max_value())

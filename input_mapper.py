@@ -24,7 +24,7 @@ class Input_Mapper:
                 Posture.TWO_LEFT: Choice.SIZE_INC,
                 Posture.TWO_RIGHT: Choice.SIZE_DEC,
                 Posture.TWO_MIDDLE: Choice.CLICK,
-                Posture.FOUR: Choice.CLEAR
+                Posture.FOUR_LEFT: Choice.CLEAR
             },
             Choice.CLEAR: {
                 Posture.TWO_LEFT: Choice.SIZE_INC,
