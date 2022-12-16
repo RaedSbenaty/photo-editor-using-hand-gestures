@@ -295,7 +295,8 @@ class Gui:
 
             if self.enable["mouse"]:
                 *s, _ = self.frame.shape
-                move_mouse(get_highest_point(contour), s)
+                print(s)
+                move_mouse2(get_highest_point(contour), s)
 
             if self.enable["tracking"]:
                 tracking(self.frame, self.traverse_point, defects['original'], contour, center)
