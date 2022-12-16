@@ -7,8 +7,6 @@ from tkinter.filedialog import asksaveasfilename
 from tkinter.colorchooser import askcolor
 from tkinter.font import Font
 
-import cv2
-import numpy as np
 from PIL import Image, ImageTk, ImageGrab
 
 from Queue import Queue
@@ -19,9 +17,6 @@ from hand_detection import *
 from mouse import *
 from finger_tracking import *
 
-FRAME_WIDTH = int(640 * 3 / 4)
-FRAME_HEIGHT = int(480 * 3 / 4)
-
 
 class Gui:
     root = Tk()
@@ -31,36 +26,32 @@ class Gui:
         self.root.bind('s', self.s_press)
         self.root.bind('t', self.t_press)
         self.root.bind('z', self.z_press)
-        # self.root.attributes("-zoomed",True)
-        # self.master.maxsize(900, 900)
+
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
 
-        w = 1200
-        h = 650
-        x = (screen_width / 2) - (w / 2)
-        y = (screen_height / 2) - (h / 2)
-
-        self.root.geometry('%dx%d+%d+%d' % (screen_width, screen_height - 70, 0, 0))
-        self.root.config(bg=BACKGROUND)  # , height=800, width=900
+        self.root.geometry('%dx%d+%d+%d' % (screen_width - 10, screen_height - 70, 0, 0))
+        self.root.config(bg=BACKGROUND1)
 
     def __init__(self):
         self.root_config()
 
         # video Frame
-        self.video_frame = Frame(self.root, bg='grey')
+        self.video_frame = Frame(self.root, bg=BACKGROUND3)
         self.video_frame.pack(side='right', padx=5, pady=5)
 
-        self.video_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT)
+        self.video_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT, bg=BACKGROUND1)
         self.video_canvas.pack(padx=5, pady=5)
 
-        self.mask_drawing_frame = Frame(self.video_frame, bg='lightgrey', width=FRAME_WIDTH, height=FRAME_HEIGHT)
+        self.mask_drawing_frame = Frame(self.video_frame, bg=BACKGROUND3, width=FRAME_WIDTH, height=FRAME_HEIGHT)
         self.mask_drawing_frame.pack(padx=5, pady=5)
 
-        self.mask_canvas = Canvas(self.mask_drawing_frame, width=250, height=250)
+        self.mask_canvas = Canvas(self.mask_drawing_frame, width=FRAME_SMALL_WIDTH, height=FRAME_SMALL_HEIGHT,
+                                  bg=BACKGROUND1)
         self.mask_canvas.pack(side='left', fill='both', expand=True, padx=5, pady=5)
 
-        self.drawing_canvas = Canvas(self.mask_drawing_frame, width=250, height=250)
+        self.drawing_canvas = Canvas(self.mask_drawing_frame, width=FRAME_SMALL_WIDTH, height=FRAME_SMALL_HEIGHT,
+                                     bg=BACKGROUND1)
         self.drawing_canvas.pack(side='right', fill='both', expand=True, padx=5, pady=5)
 
         self.cap = cv2.VideoCapture(0)
@@ -77,19 +68,19 @@ class Gui:
         self.get_new_frame()
 
         # image Frame
-        self.image_frame = Frame(self.root, bg='grey',width= IMAGE_WIDTH)
+        self.image_frame = Frame(self.root, bg=BACKGROUND3, width=IMAGE_WIDTH)
         self.image_frame.pack(side='right', fill='both', padx=10, pady=5)
 
-        self.canvas = Canvas(self.image_frame, bg='grey')
+        self.canvas = Canvas(self.image_frame, bg=BACKGROUND3, height=IMAGE_HIEGHT, width=IMAGE_WIDTH)
         self.canvas.pack(fill='both', padx=5, pady=5)
         self.canvas_setting()
 
-        self.paint_setting_frame = Frame(self.image_frame, bg='lightgrey')
+        self.paint_setting_frame = Frame(self.image_frame, bg=BACKGROUND2)
         self.paint_setting_frame.pack(fill='both', expand=1, padx=5, pady=5)
 
         # setting Frame
-        self.setting_frame = Frame(self.root, bg='grey', width=300)
-        self.setting_frame.pack(side='left', fill='both', padx=10, pady=5, expand=True)
+        self.setting_frame = Frame(self.root, bg=BACKGROUND3, width=300)
+        self.setting_frame.pack(side='left', fill='both', padx=5, pady=5)
         self.make_left_frame()
 
         # gui variables
@@ -104,16 +95,13 @@ class Gui:
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
-    def key_press(self, a):
-        print("gh")
-
     # save && select
     def select(self):  # Load images from the computer
         self.img_path = filedialog.askopenfilename(initialdir=os.getcwd())
         if self.img_path is not None:
             self.image = Image.open(self.img_path)
             # print(self.image)
-            self.image = self.image.resize((IMAGE_HIEGHT, IMAGE_WIDTH))
+            self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
             self.put_image_in_canvas()
 
     def save(self):
@@ -201,7 +189,6 @@ class Gui:
     def put_image_in_canvas(self):
         self.canvas.delete("image")
         img = ImageTk.PhotoImage(self.image)
-        # self.canvas.config(height=img.height(), width=img.width())
         self.canvas.create_image(0, 0, image=img, anchor='nw', tag="image")
         self.canvas.image = img
 
@@ -209,7 +196,6 @@ class Gui:
         self.canvas.bind("<Button-1>", self.get_x_and_y)
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.bind('<Motion>', self.cursor_tracker)
-        self.canvas.config(height=IMAGE_HIEGHT + 70, width=IMAGE_WIDTH - 70)
 
     def put_paint_setting_frame(self):
         if len(self.paint_setting_frame.winfo_children()) == 0:
@@ -239,11 +225,14 @@ class Gui:
         original_image = img.resize((100, 100))
         original_image = ImageTk.PhotoImage(original_image)
 
-        tool_bar = Frame(self.setting_frame, width=90, height=185, bg='lightgrey')
+        tool_bar = Frame(self.setting_frame, width=90, bg=BACKGROUND2)
         tool_bar.pack(side='left', fill='both', padx=5, pady=5, expand=True)
 
-        tool_bar2 = Frame(self.setting_frame, width=90, height=185, bg='lightgrey')
-        tool_bar2.pack(side='right', fill='both', padx=5, pady=5, expand=True)
+        tool_bar2 = Frame(self.setting_frame, width=90, bg=BACKGROUND2)
+        tool_bar2.pack(side='left', fill='both', padx=2, pady=5, expand=True)
+
+        tool_bar3 = Frame(self.setting_frame, width=90, bg=BACKGROUND2)
+        tool_bar3.pack(side='right', fill='both', padx=5, pady=5, expand=True)
 
         self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
         self.put_gesture(tool_bar, "Rotate", original_image, Choice.ROTATE)
@@ -255,12 +244,17 @@ class Gui:
         self.put_gesture(tool_bar2, "Clear", original_image, Choice.CLEAR)
         self.put_gesture(tool_bar2, "Paint", original_image, Choice.PAINT)
 
+        self.put_gesture(tool_bar3, "Right", original_image, Choice.CLEAR)
+        self.put_gesture(tool_bar3, "Left", original_image, Choice.PAINT)
+
     def put_gesture(self, root, text, image, choice):
-        Label(root, image=image).pack(fill='both', padx=5, pady=5)
+        c = Canvas(root, width=100, height=100, bg=BACKGROUND1)
+        c.pack(fill='both', padx=2, pady=5)
+        c.create_image(0, 0, image=image, anchor='nw', tag="image")
+        c.image = image
         Button(root, text=text, command=lambda: self.choose(choice)).pack(padx=5, pady=5)
 
     # video frame
-
     def s_press(self, s):
         self.enable["mouse"] = not self.enable["mouse"]
 
@@ -278,7 +272,7 @@ class Gui:
 
         try:
             skin_mask, contour, hull, center, defects = hand_detection(self.frame, self.bgFrame)
-            s_mask = cv2.resize(skin_mask, (250, 250))
+            s_mask = cv2.resize(skin_mask, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
             self.show_frame(s_mask, self.mask_canvas)
             # cv2.imshow("skin", skin_mask)
             counter, is_space = count_fingers_spaces(defects['simplified'])
@@ -310,7 +304,7 @@ class Gui:
             print(e)
             pass
 
-        drawing = cv2.resize(drawing, (250, 250))
+        drawing = cv2.resize(drawing, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
         frm = cv2.resize(self.frame, (FRAME_WIDTH, FRAME_HEIGHT))
         self.show_frames((frm, self.video_canvas), (drawing, self.drawing_canvas))
         # Repeat after an interval to capture continiously
