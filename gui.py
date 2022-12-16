@@ -27,10 +27,11 @@ class Gui:
         self.root.bind('t', self.t_press)
         self.root.bind('z', self.z_press)
 
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-
-        self.root.geometry('%dx%d+%d+%d' % (screen_width - 10, screen_height - 70, 0, 0))
+        # screen_width = self.root.winfo_screenwidth()
+        # screen_height = self.root.winfo_screenheight()
+        # print(screen_height, screen_width)
+        x, y = 1366, 768
+        self.root.geometry('%dx%d+%d+%d' % (x - 10, y - 70, 0, 0))
         self.root.config(bg=BACKGROUND1)
 
     def __init__(self):
@@ -168,16 +169,18 @@ class Gui:
         self.choice = c
         if self.image is not None:
             if self.choice == Choice.ROTATE:
-                self.image = self.image_processing.rotate(self.image, value)
+                self.image = self.image_processing.rotate(self.image,value if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
-                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value)  # tuple
+                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value if value else (80,80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
-                self.image = self.image_processing.resize(self.image, value)
+                self.image = self.image_processing.resize(self.image,value if value else 0.8)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
+            elif self.choice == Choice.SKEW:
+                self.image = self.image_processing.shear(self.image,value if value else (0,130))
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
         else:
@@ -240,7 +243,7 @@ class Gui:
         self.put_gesture(tool_bar, "Translate", original_image, Choice.TRANSLATE)
 
         self.put_gesture(tool_bar2, "Save", original_image, Choice.SAVE)
-        self.put_gesture(tool_bar2, "Warp", original_image, Choice.WARP)
+        self.put_gesture(tool_bar2, "Skew", original_image, Choice.SKEW)
         self.put_gesture(tool_bar2, "Clear", original_image, Choice.CLEAR)
         self.put_gesture(tool_bar2, "Paint", original_image, Choice.PAINT)
 
