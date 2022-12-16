@@ -215,14 +215,14 @@ class Gui:
             self.paint_width_frame(self.paint_setting_frame, "Change brush width", self.brush_width)
             self.paint_width_frame(self.paint_setting_frame, "Change clear width ", self.clear_width)
 
-    def paint_width_frame(self, frame, text, textvarible):
-        brush_width = Frame(frame, bg=BACKGROUND3)
+    def paint_width_frame(self, frame, text, text_variable):
+        brush_width = Frame(frame, bg=BACKGROUND2)
         brush_width.pack(fill='both', expand=1, padx=5, pady=5)
 
-        Label(brush_width, text=text, bg=BACKGROUND3, font="Times 18 roman normal") \
+        Label(brush_width, text=text, bg=BACKGROUND2, font="Times 18 roman normal") \
             .pack(side='left', padx=5, pady=5)
 
-        Spinbox(brush_width, from_=0, to=30, width=3, textvariable=textvarible, wrap=True,
+        Spinbox(brush_width, from_=0, to=30, width=3, textvariable=text_variable, wrap=True,
                 font=Font(family='Times', size=25, weight='normal')).pack(side='left', padx=5, pady=5)
 
     def clear_paint_frame(self):
