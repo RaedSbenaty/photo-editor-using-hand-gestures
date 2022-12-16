@@ -1,6 +1,7 @@
 # https://www.pythonguis.com/faq/pack-place-and-grid-in-tkinter/
 
 import os
+import time
 from tkinter import *
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfilename
@@ -16,8 +17,9 @@ import imageProcessing
 from hand_detection import *
 from mouse import *
 from finger_tracking import *
-from motion_direction import * 
+from motion_direction import *
 from input_mapper import *
+
 
 class Gui:
     root = Tk()
@@ -27,6 +29,7 @@ class Gui:
         self.root.bind('s', self.s_press)
         self.root.bind('t', self.t_press)
         self.root.bind('z', self.z_press)
+        self.root.bind('b', self.b_press)
 
         # screen_width = self.root.winfo_screenwidth()
         # screen_height = self.root.winfo_screenheight()
@@ -42,32 +45,38 @@ class Gui:
         self.video_frame = Frame(self.root, bg=BACKGROUND3)
         self.video_frame.pack(side='right', padx=5, pady=5)
 
-        self.video_canvas = Canvas(self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT, bg=BACKGROUND1)
+        self.video_canvas = Canvas(
+            self.video_frame, width=FRAME_WIDTH, height=FRAME_HEIGHT, bg=BACKGROUND1)
         self.video_canvas.pack(padx=5, pady=5)
 
-        self.mask_drawing_frame = Frame(self.video_frame, bg=BACKGROUND3, width=FRAME_WIDTH, height=FRAME_HEIGHT)
+        self.mask_drawing_frame = Frame(
+            self.video_frame, bg=BACKGROUND3, width=FRAME_WIDTH, height=FRAME_HEIGHT)
         self.mask_drawing_frame.pack(padx=5, pady=5)
 
         self.mask_canvas = Canvas(self.mask_drawing_frame, width=FRAME_SMALL_WIDTH, height=FRAME_SMALL_HEIGHT,
                                   bg=BACKGROUND1)
-        self.mask_canvas.pack(side='left', fill='both', expand=True, padx=5, pady=5)
+        self.mask_canvas.pack(side='left', fill='both',
+                              expand=True, padx=5, pady=5)
 
         self.drawing_canvas = Canvas(self.mask_drawing_frame, width=FRAME_SMALL_WIDTH, height=FRAME_SMALL_HEIGHT,
                                      bg=BACKGROUND1)
-        self.drawing_canvas.pack(side='right', fill='both', expand=True, padx=5, pady=5)
+        self.drawing_canvas.pack(
+            side='right', fill='both', expand=True, padx=5, pady=5)
 
         self.cap = cv2.VideoCapture(0)
 
         # detection variables
         self.posture_queue = Queue(30, Choice.NOTHING)
-        self.traverse_point = Queue(15,(0,0))
+        self.traverse_point = Queue(15, (0, 0))
+        self.prev_bg_time = 0
         self.bgFrame = None
         self.frame = None
         self.frame_counter = 0
         self.input_mapper = Input_Mapper()
         self.enable = {
             "mouse": False,
-            "tracking": False
+            "tracking": False,
+            "background": False
         }
         self.get_new_frame()
 
@@ -75,7 +84,8 @@ class Gui:
         self.image_frame = Frame(self.root, bg=BACKGROUND3, width=IMAGE_WIDTH)
         self.image_frame.pack(side='right', fill='both', padx=10, pady=5)
 
-        self.canvas = Canvas(self.image_frame, bg=BACKGROUND3, height=IMAGE_HIEGHT, width=IMAGE_WIDTH)
+        self.canvas = Canvas(self.image_frame, bg=BACKGROUND3,
+                             height=IMAGE_HIEGHT, width=IMAGE_WIDTH)
         self.canvas.pack(fill='both', padx=5, pady=5)
         self.canvas_setting()
 
@@ -95,7 +105,8 @@ class Gui:
         self.colors = ('red', 'blue')
         self.brush_width = StringVar(value=5)
         self.clear_width = StringVar(value=20)
-        self.deleted_tag = "delete"  # this for the moving shape with the cursor (Paint && Clear)
+        # this for the moving shape with the cursor (Paint && Clear)
+        self.deleted_tag = "delete"
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
@@ -103,7 +114,8 @@ class Gui:
 
     # save && select
     def select(self):  # Load images from the computer
-        self.img_path = filedialog.askopenfilename(initialdir=os.getcwd() + "/images")
+        self.img_path = filedialog.askopenfilename(
+            initialdir=os.getcwd() + "/images")
         if self.img_path is not None:
             self.image = Image.open(self.img_path)
             # print(self.image)
@@ -129,11 +141,14 @@ class Gui:
             border_thickness_bd, highlight_thickness = 2, 1
             brdt = border_thickness_bd + highlight_thickness
             # +1 and -2 because of thicknesses of Canvas borders (bd-border and highlight-border):
-            x = self.root.winfo_rootx() + self.image_frame.winfo_x() + self.canvas.winfo_x() + brdt
-            y = self.root.winfo_rooty() + self.image_frame.winfo_y() + self.canvas.winfo_y() + brdt
+            x = self.root.winfo_rootx() + self.image_frame.winfo_x() + \
+                self.canvas.winfo_x() + brdt
+            y = self.root.winfo_rooty() + self.image_frame.winfo_y() + \
+                self.canvas.winfo_y() + brdt
 
             img = ImageTk.PhotoImage(self.image)
-            width, height = (img.width(), img.height()) if IMAGE_WIDTH > img.width() else (IMAGE_WIDTH, IMAGE_HIEGHT)
+            width, height = (img.width(), img.height()) if IMAGE_WIDTH > img.width() else (
+                IMAGE_WIDTH, IMAGE_HIEGHT)
             x1 = x + width - 2 * brdt
             y1 = y + height - 2 * brdt
             ImageGrab.grab().crop((x, y, x1, y1)).save(file)
@@ -147,7 +162,8 @@ class Gui:
         global lasx, lasy
         if self.choice == Choice.PAINT:
             w = int(self.brush_width.get())
-            line = self.canvas.create_line((lasx, lasy, event.x, event.y), fill=self.colors[1], width=w)
+            line = self.canvas.create_line(
+                (lasx, lasy, event.x, event.y), fill=self.colors[1], width=w)
             self.lines.append((line, lasx, lasy))
 
         elif self.choice == Choice.CLEAR:
@@ -167,7 +183,8 @@ class Gui:
                                          tag=self.deleted_tag)
         elif self.choice == Choice.CLEAR:
             w = int(self.clear_width.get())
-            self.canvas.create_oval((x - w, y - w, x + w, y + w), outline="white", fill="", tag=self.deleted_tag)
+            self.canvas.create_oval(
+                (x - w, y - w, x + w, y + w), outline="white", fill="", tag=self.deleted_tag)
         # print("Pointer is currently at %d, %d" % (x, y))
 
     def change_color(self):
@@ -177,19 +194,22 @@ class Gui:
         self.choice = c
         if self.image is not None:
             if self.choice == Choice.ROTATE:
-                self.image = self.image_processing.rotate(self.image, value if value else 180)
+                self.image = self.image_processing.rotate(
+                    self.image, value if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value if value else (
                     80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
-                self.image = self.image_processing.scale(self.image, value if value else 0.8)
+                self.image = self.image_processing.scale(
+                    self.image, value if value else 0.8)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
             elif self.choice == Choice.SKEW:
-                self.image = self.image_processing.shear(self.image, value if value else (0, 130))
+                self.image = self.image_processing.shear(
+                    self.image, value if value else (0, 130))
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
         else:
@@ -215,8 +235,10 @@ class Gui:
                    command=self.change_color) \
                 .pack(padx=5, pady=5)
 
-            self.paint_width_frame(self.paint_setting_frame, "Change brush width", self.brush_width)
-            self.paint_width_frame(self.paint_setting_frame, "Change clear width ", self.clear_width)
+            self.paint_width_frame(
+                self.paint_setting_frame, "Change brush width", self.brush_width)
+            self.paint_width_frame(
+                self.paint_setting_frame, "Change clear width ", self.clear_width)
 
     def paint_width_frame(self, frame, text, text_variable):
         brush_width = Frame(frame, bg=BACKGROUND2)
@@ -249,7 +271,8 @@ class Gui:
         self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
         self.put_gesture(tool_bar, "Rotate", original_image, Choice.ROTATE)
         self.put_gesture(tool_bar, "Scale", original_image, Choice.SCALE)
-        self.put_gesture(tool_bar, "Translate", original_image, Choice.TRANSLATE)
+        self.put_gesture(tool_bar, "Translate",
+                         original_image, Choice.TRANSLATE)
 
         self.put_gesture(tool_bar2, "Save", original_image, Choice.SAVE)
         self.put_gesture(tool_bar2, "Skew", original_image, Choice.SKEW)
@@ -264,7 +287,8 @@ class Gui:
         c.pack(fill='both', padx=2, pady=5)
         c.create_image(0, 0, image=image, anchor='nw', tag="image")
         c.image = image
-        Button(root, text=text, command=lambda: self.choose(choice)).pack(padx=5, pady=5)
+        Button(root, text=text, command=lambda: self.choose(
+            choice)).pack(padx=5, pady=5)
 
     # video frame
     def s_press(self, s):
@@ -276,15 +300,21 @@ class Gui:
     def t_press(self, t):
         self.enable["tracking"] = not self.enable["tracking"]
 
+    def b_press(self, b):
+        self.enable["background"] = not self.enable["background"]
+        print(self.enable["background"])
+
     def get_new_frame(self):
 
         self.frame = self.cap.read()[1]
         self.frame = cv2.flip(self.frame, 1)
         drawing = np.zeros(self.frame.shape, np.uint8)
-        self.frame_counter += 1 
+        self.frame_counter += 1
         try:
-            skin_mask, contour, hull, center, defects = hand_detection(self.frame, self.bgFrame)
-            s_mask = cv2.resize(skin_mask, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
+            skin_mask, contour, hull, center, defects = hand_detection(
+                self.frame, self.bgFrame)
+            s_mask = cv2.resize(
+                skin_mask, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
             self.show_frame(s_mask, self.mask_canvas)
             # cv2.imshow("skin", skin_mask)
             counter, is_space = count_fingers_spaces(defects['simplified'])
@@ -303,27 +333,35 @@ class Gui:
                 color = [255, 0, 0] if is_space[i] else [0, 0, 255]
                 cv2.circle(self.frame, far, 5, color, -1)
 
+            if self.enable["background"] and time.time() - self.prev_bg_time > 3:
+                self.bgFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YCrCb)
+                self.prev_bg_time = time.time()
+
             if self.enable["mouse"]:
                 *s, _ = self.frame.shape
                 print(s)
                 move_mouse2(get_highest_point(contour), s)
 
             if self.enable["tracking"]:
-                tracking(self.frame, self.traverse_point, defects['original'], contour, center)
-            if self.frame_counter %30 == 0:
+                tracking(self.frame, self.traverse_point,
+                         defects['original'], contour, center)
+
+            if self.frame_counter % 30 == 0:
                 posture = self.posture_queue.max_value()
                 choice = self.input_mapper.map(posture)
                 value = get_direction_from(self.traverse_point)
                 print(f"{choice=},{value=}")
-                #self.choose(choice, value)
+                # self.choose(choice, value)
+
         except Exception as e:
-            #traceback.print_exc()
-            print(e)
+            # traceback.print_exc()
+            # print(e)
             pass
 
         drawing = cv2.resize(drawing, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
         frm = cv2.resize(self.frame, (FRAME_WIDTH, FRAME_HEIGHT))
-        self.show_frames((frm, self.video_canvas), (drawing, self.drawing_canvas))
+        self.show_frames((frm, self.video_canvas),
+                         (drawing, self.drawing_canvas))
         # Repeat after an interval to capture continiously
         self.video_canvas.after(5, self.get_new_frame)
 
