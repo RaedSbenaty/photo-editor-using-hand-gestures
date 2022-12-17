@@ -354,7 +354,6 @@ class Gui:
 
                 if self.frame_counter % 30 == 0:
                     posture = self.posture_queue.max_value()
-                    print(f"{self.input_mapper.current_choice=} , {posture=}")
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
                     print(f"{choice=},{value=}")
