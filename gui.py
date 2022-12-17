@@ -99,7 +99,7 @@ class Gui:
 
         # gui variables
         self.image = None
-        self.image_prev = None
+        self.images_prev = Queue(20)
         self.img_path = None
 
         self.choice = Choice.NOTHING
@@ -124,7 +124,7 @@ class Gui:
             self.image = Image.open(self.img_path)
             # print(self.image)
             self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
-            self.image_prev = self.image
+            self.images_prev.append(self.image)
             self.put_image_in_canvas()
 
     def save(self):
@@ -198,7 +198,12 @@ class Gui:
     def choose(self, c, value=None):
         self.choice = c
         if self.image is not None:
-            self.image_prev = self.image.copy()
+            if self.choice == Choice.UNDO:
+                if self.images_prev.len() > 0:
+                    self.image = self.images_prev.pop()
+                    self.put_image_in_canvas()
+            else:
+                self.images_prev.append(self.image.copy())
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
@@ -206,7 +211,8 @@ class Gui:
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image \
-                                ,new_center=value if value else ( 80, 80))  # tuple
+                                                                          , new_center=value if value else (
+                    80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
                 self.image = self.image_processing.scale(
@@ -218,9 +224,7 @@ class Gui:
                 self.image = self.image_processing.shear(
                     self.image, value if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
-            elif self.choice == Choice.UNDO:
-                self.image = self.image_prev.copy()
-                self.put_image_in_canvas()
+
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
                 water_mark_path = self.open_file_dialog()
@@ -349,8 +353,8 @@ class Gui:
                             1, (0, 0, 255), 2, cv2.LINE_AA)
 
                 cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
-                cv2.drawContours(self.frame, [hull], 0,  [0, 165, 255], 2)
-                cv2.drawContours(drawing, [hull], 0,  [0, 165, 255], 2)
+                cv2.drawContours(self.frame, [hull], 0, [0, 165, 255], 2)
+                cv2.drawContours(drawing, [hull], 0, [0, 165, 255], 2)
                 cv2.circle(self.frame, center, 5, [0, 0, 255], 2)
 
                 for i, (start, end, far) in enumerate(defects['simplified']):
