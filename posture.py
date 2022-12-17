@@ -22,3 +22,5 @@ class Posture(Enum):
 
     FIVE_RIGHT_SIDE = 5.3  #
     FIVE_LEFT_SIDE = 5.4  #
+    
+    NONE = 6.0 #

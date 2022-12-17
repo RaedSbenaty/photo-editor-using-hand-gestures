@@ -63,11 +63,15 @@ def find_center(contour):
 
 
 def find_defects(contour):
-    hull = cv2.convexHull(contour, returnPoints=False)
-    original_defects = cv2.convexityDefects(contour, hull)
-    simplified_defects = []
+    original_defects, simplified_defects = [], []
 
-    if original_defects is not None:
+    hull = cv2.convexHull(contour, returnPoints=False)
+    try:
+        original_defects = cv2.convexityDefects(contour, hull)
+    except:
+        pass
+
+    if original_defects is not None and len(original_defects) != 0:
         for i in range(original_defects.shape[0]):
             s, e, f, _ = original_defects[i, 0]
             simplified_defects.append([tuple(contour[s][0]), tuple(
@@ -84,6 +88,8 @@ def find_defects(contour):
 
 def hand_detection(frame, bgFrame=None):
     # global mini, maxi
+
+    hull, defects, center = [None]*3
     skin_mask = generate_skin_mask(frame)
 
     if bgFrame is not None:
@@ -94,23 +100,23 @@ def hand_detection(frame, bgFrame=None):
     # skin_mask = opening(skin_mask)
     skin_mask = closing(skin_mask)
     contour = find_hand_contours(skin_mask)
+    if contour is not None:
+        hull = cv2.convexHull(contour)
 
-    hull = cv2.convexHull(contour)
+        # k = cv2.waitKey(10)
+        # if k == ord('h'):
+        # width = get_rightmost_point(hull)[0] - get_leftmost_point(hull)[0]
+        # height = get_lowest_point(hull)[1] - get_highest_point(hull)[1]
+        # ratio = width/height
+        # area = cv2.contourArea(hull)
+        # mini = min(mini, width/height)
+        # maxi = max(maxi, width/height)
+        # print(mini, maxi)
 
-    # k = cv2.waitKey(10)
-    # if k == ord('h'):
-    # width = get_rightmost_point(hull)[0] - get_leftmost_point(hull)[0]
-    # height = get_lowest_point(hull)[1] - get_highest_point(hull)[1]
-    # ratio = width/height
-    # area = cv2.contourArea(hull)
-    # mini = min(mini, width/height)
-    # maxi = max(maxi, width/height)
-    # print(mini, maxi)
-
-    center = find_center(contour)
-    contour = cv2.approxPolyDP(
-        contour, 0.015 * cv2.arcLength(contour, True), True)
-    defects = find_defects(contour)
+        center = find_center(contour)
+        contour = cv2.approxPolyDP(
+            contour, 0.015 * cv2.arcLength(contour, True), True)
+        defects = find_defects(contour)
 
     return skin_mask, contour, hull, center, defects
 
@@ -185,6 +191,8 @@ def detect_postures(frame, hull, contour, center, defects):
             return Posture.FIVE_LEFT_SIDE
         lowest = max(opened_defectes, key=lambda c: c[1])
         return Posture.FIVE_RIGHT if lowest[0] < center[0] else Posture.FIVE_LEFT
+
+    return Posture.NONE
 
 
 # def detect_postures2(frame, hull, contour, finger_spaces_counter):
