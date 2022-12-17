@@ -99,6 +99,7 @@ class Gui:
 
         # gui variables
         self.image = None
+        self.image_prev = None
         self.img_path = None
 
         self.choice = Choice.NOTHING
@@ -112,14 +113,18 @@ class Gui:
 
         self.save_counter = 1
 
+    def open_file_dialog(self):
+        return filedialog.askopenfilename(
+            initialdir=os.getcwd() + "/images")
+
     # save && select
     def select(self):  # Load images from the computer
-        self.img_path = filedialog.askopenfilename(
-            initialdir=os.getcwd() + "/images")
+        self.img_path = self.open_file_dialog()
         if self.img_path is not None:
             self.image = Image.open(self.img_path)
             # print(self.image)
             self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
+            self.image_prev = self.image
             self.put_image_in_canvas()
 
     def save(self):
@@ -193,13 +198,15 @@ class Gui:
     def choose(self, c, value=None):
         self.choice = c
         if self.image is not None:
+            self.image_prev = self.image.copy()
+
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
                     self.image, value if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
-                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value if value else (
-                    80, 80))  # tuple
+                self.image = self.image_processing.scale_rotate_translate(self.image \
+                                ,new_center=value if value else ( 80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
                 self.image = self.image_processing.scale(
@@ -209,7 +216,18 @@ class Gui:
                 self.save2()
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
-                    self.image, value if value else (0, 130))
+                    self.image, value if value else (-1.5, 0.5))
+                self.put_image_in_canvas()
+            elif self.choice == Choice.UNDO:
+                self.image = self.image_prev.copy()
+                self.put_image_in_canvas()
+
+            elif self.choice == Choice.WATER_MARK_IMAGE:
+                water_mark_path = self.open_file_dialog()
+                if water_mark_path:
+                    self.image = self.image_processing.watermark_with_transparency(self.image, water_mark_path)
+                    self.put_image_in_canvas()
+
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
         else:
@@ -271,20 +289,21 @@ class Gui:
         self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
         self.put_gesture(tool_bar, "Rotate", original_image, Choice.ROTATE)
         self.put_gesture(tool_bar, "Scale", original_image, Choice.SCALE)
-        self.put_gesture(tool_bar, "Translate",
-                         original_image, Choice.TRANSLATE)
+        self.put_gesture(tool_bar, "Translate", original_image, Choice.TRANSLATE)
 
         self.put_gesture(tool_bar2, "Save", original_image, Choice.SAVE)
         self.put_gesture(tool_bar2, "Skew", original_image, Choice.SKEW)
         self.put_gesture(tool_bar2, "Clear", original_image, Choice.CLEAR)
         self.put_gesture(tool_bar2, "Paint", original_image, Choice.PAINT)
 
+        self.put_gesture(tool_bar3, "Water Mark", original_image, Choice.WATER_MARK_IMAGE)
+        self.put_gesture(tool_bar3, "Undo", original_image, Choice.UNDO)
         self.put_gesture(tool_bar3, "Right", original_image, Choice.CLEAR)
         self.put_gesture(tool_bar3, "Left", original_image, Choice.PAINT)
 
     def put_gesture(self, root, text, image, choice):
         c = Canvas(root, width=100, height=100, bg=BACKGROUND1)
-        c.pack(fill='both', padx=2, pady=5)
+        c.pack(fill='both', padx=2, pady=2)
         c.create_image(0, 0, image=image, anchor='nw', tag="image")
         c.image = image
         Button(root, text=text, command=lambda: self.choose(

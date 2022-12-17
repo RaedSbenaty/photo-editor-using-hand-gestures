@@ -15,3 +15,5 @@ class Choice(Enum):
     CLICK = 10 
     SIZE_INC = 11 
     SIZE_DEC = 12
+    WATER_MARK_IMAGE = 13
+    UNDO= 14
