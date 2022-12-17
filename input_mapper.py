@@ -19,7 +19,7 @@ class Input_Mapper:
                 Posture.THREE_RIGHT: Choice.NOTHING,  # unused
                 Posture.THREE_MIDDLE: Choice.NOTHING,  # unused
 
-                Posture.FOUR_RIGHT: Choice.WATER_MARK,  # unsused
+                Posture.FOUR_RIGHT: Choice.WATER_MARK_IMAGE,  # unsused
                 Posture.FOUR_LEFT: Choice.CLEAR,
 
                 Posture.FIVE_LEFT: Choice.SELECT,
@@ -35,7 +35,7 @@ class Input_Mapper:
                 Posture.TWO_RIGHT: Choice.SIZE_DEC,
                 Posture.TWO_MIDDLE: Choice.CLICK
             },
-            Choice.WATER_MARK: {
+            Choice.WATER_MARK_IMAGE: {
                 Posture.TWO_LEFT: Choice.SIZE_INC,
                 Posture.TWO_RIGHT: Choice.SIZE_DEC,
                 Posture.TWO_MIDDLE: Choice.CLICK

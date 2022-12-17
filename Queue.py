@@ -26,6 +26,11 @@ class Queue:
             return self.default_value,self.default_value
         return self.q[0], self.q[-1]
 
+    def pop(self):
+        return self.q.pop()
+
+    def len(self):
+        return len(self.q)
 
 q = Queue(20)
 
