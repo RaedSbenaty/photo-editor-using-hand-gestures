@@ -27,10 +27,34 @@ def generate_skin_mask(img):
     return mask.astype(np.uint8) * 255
 
 
+# The color of the skin at unified daylight illumination
+def generate_skin_mask2(img):
+    B, G, R = cv2.split(img)
+    mask = (R > 95) & (G > 40) & (B > 20) & (
+        np.maximum(R, np.maximum(G, B)) - np.minimum(R, np.minimum(G, B)) > 15
+    ) & (abs(R - G) > 15) & (R > G) & (R > B)
+    return mask.astype(np.uint8) * 255
+
+
+# The skin color under flashlight or (light) daylight lateral illumination
+def generate_skin_mask3(img):
+    B, G, R = cv2.split(img)
+    mask = (R > 220) & (G > 210) & (B > 170) & (abs(
+        R - G) <= 15) & (R > B) & (G > B)
+    return mask.astype(np.uint8) * 255
+
+
 def ycbcr_substract(img1, img):
     diff = cv2.absdiff(img1, img)
     diff = diff[:, :, 1] + diff[:, :, 2]
     diff = (diff >= 10) * 255
+    return diff.astype(np.uint8)
+
+
+def brg_substract(img1, img):
+    diff = cv2.absdiff(img1, img)
+    diff = diff[:, :, 0] + diff[:, :, 1] + diff[:, :, 2]
+    diff = (diff >= 20) * 255
     return diff.astype(np.uint8)
 
 
@@ -90,11 +114,12 @@ def hand_detection(frame, bgFrame=None):
     # global mini, maxi
 
     hull, defects, center = [None]*3
-    skin_mask = generate_skin_mask(frame)
+    skin_mask = generate_skin_mask2(frame)
 
     if bgFrame is not None:
-        ycrcb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
-        diff = ycbcr_substract(ycrcb_frame, bgFrame)
+        # ycrcb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
+        # diff = ycbcr_substract(ycrcb_frame, bgFrame)
+        diff = brg_substract(frame, bgFrame)
         skin_mask = diff & skin_mask
 
     # skin_mask = opening(skin_mask)
