@@ -324,9 +324,9 @@ class Gui:
                 res = detect_postures(self.frame, hull, contour, center,
                                       defects['simplified'])
 
-                self.posture_queue.append(res._name_)
+                self.posture_queue.append(res)
 
-                cv2.putText(self.frame, str(self.posture_queue.max_value()), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 0, 255), 2, cv2.LINE_AA)
 
                 cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
@@ -354,13 +354,16 @@ class Gui:
 
                 if self.frame_counter % 30 == 0:
                     posture = self.posture_queue.max_value()
+                    print(f"{self.input_mapper.current_choice=} , {posture=}")
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
                     print(f"{choice=},{value=}")
                     # self.choose(choice, value)
 
         except:
+            print('\n\n')
             traceback.print_exc()
+            print('\n\n')
 
         drawing = cv2.resize(drawing, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
         frm = cv2.resize(self.frame, (FRAME_WIDTH, FRAME_HEIGHT))
