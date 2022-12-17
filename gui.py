@@ -314,7 +314,7 @@ class Gui:
         self.enable["mouse"] = not self.enable["mouse"]
 
     def z_press(self, z):
-        self.bgFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YCrCb)
+        self.bgFrame = cv2.cvtColor(self.orginal_frame, cv2.COLOR_BGR2YCrCb)
 
     def t_press(self, t):
         self.enable["tracking"] = not self.enable["tracking"]
@@ -327,55 +327,62 @@ class Gui:
 
         self.frame = self.cap.read()[1]
         self.frame = cv2.flip(self.frame, 1)
+        self.orginal_frame = self.frame.copy()
         drawing = np.zeros(self.frame.shape, np.uint8)
         self.frame_counter += 1
+
         try:
             skin_mask, contour, hull, center, defects = hand_detection(
                 self.frame, self.bgFrame)
             s_mask = cv2.resize(
                 skin_mask, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
             self.show_frame(s_mask, self.mask_canvas)
-            # cv2.imshow("skin", skin_mask)
-            counter, is_space = count_fingers_spaces(defects['simplified'])
 
-            res = detect_postures(self.frame, hull, contour, center,
-                                  defects['simplified'])
-            self.posture_queue.append(res)
+            if defects is not None:
+                counter, is_space = count_fingers_spaces(defects['simplified'])
+                res = detect_postures(self.frame, hull, contour, center,
+                                      defects['simplified'])
 
-            cv2.putText(self.frame, str(self.posture_queue.max_value()), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 0, 255), 2, cv2.LINE_AA)
+                self.posture_queue.append(res)
 
-            cv2.drawContours(drawing, [contour, hull], -1, (0, 255, 0), 2)
-            cv2.circle(self.frame, center, 5, [0, 0, 255], 2)
-            for i, (start, end, far) in enumerate(defects['simplified']):
-                cv2.line(self.frame, start, end, [0, 255, 0], 2)
-                color = [255, 0, 0] if is_space[i] else [0, 0, 255]
-                cv2.circle(self.frame, far, 5, color, -1)
+                cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                            1, (0, 0, 255), 2, cv2.LINE_AA)
 
-            if self.enable["background"] and time.time() - self.prev_bg_time > 3:
-                self.bgFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YCrCb)
-                self.prev_bg_time = time.time()
+                cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
+                cv2.drawContours(self.frame, [hull], 0,  [0, 165, 255], 2)
+                cv2.drawContours(drawing, [hull], 0,  [0, 165, 255], 2)
+                cv2.circle(self.frame, center, 5, [0, 0, 255], 2)
 
-            if self.enable["mouse"]:
-                *s, _ = self.frame.shape
-                print(s)
-                move_mouse2(get_highest_point(contour), s)
+                for i, (start, end, far) in enumerate(defects['simplified']):
+                    if is_space[i]:
+                        cv2.circle(self.frame, far, 5, [255, 0, 0], -1)
 
-            if self.enable["tracking"]:
-                tracking(self.frame, self.traverse_point,
-                         defects['original'], contour, center)
+                if self.enable["background"] and time.time() - self.prev_bg_time > 3:
+                    self.bgFrame = cv2.cvtColor(
+                        self.orginal_frame, cv2.COLOR_BGR2YCrCb)
+                    self.prev_bg_time = time.time()
 
-            if self.frame_counter % 30 == 0:
-                posture = self.posture_queue.max_value()
-                choice = self.input_mapper.map(posture)
-                value = get_direction_from(self.traverse_point)
-                print(f"{choice=},{value=}")
-                # self.choose(choice, value)
+                if self.enable["mouse"]:
+                    *s, _ = self.frame.shape
+                    print(s)
+                    move_mouse2(get_highest_point(contour), s)
 
-        except Exception as e:
-            # traceback.print_exc()
-            # print(e)
-            pass
+                if self.enable["tracking"]:
+                    tracking(self.frame, self.traverse_point,
+                             defects['original'], contour, center)
+
+                if self.frame_counter % 30 == 0:
+                    posture = self.posture_queue.max_value()
+                    print(f"{self.input_mapper.current_choice=} , {posture=}")
+                    choice = self.input_mapper.map(posture)
+                    value = get_direction_from(self.traverse_point)
+                    print(f"{choice=},{value=}")
+                    # self.choose(choice, value)
+
+        except:
+            print('\n\n')
+            traceback.print_exc()
+            print('\n\n')
 
         drawing = cv2.resize(drawing, (FRAME_SMALL_WIDTH, FRAME_SMALL_HEIGHT))
         frm = cv2.resize(self.frame, (FRAME_WIDTH, FRAME_HEIGHT))
