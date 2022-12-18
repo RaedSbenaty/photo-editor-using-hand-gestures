@@ -108,6 +108,7 @@ class Gui:
         self.clear_width = StringVar(value=20)
         # this for the moving shape with the cursor (Paint && Clear)
         self.deleted_tag = "delete"
+        self.paint_tag = "paint"
         self.lines = []
         self.image_processing = imageProcessing.ImageProcessing()
 
@@ -163,20 +164,25 @@ class Gui:
         global lasx, lasy
         lasx, lasy = event.x, event.y
 
-    def draw(self, event):
+    def paint_line(self, x, y, x1, y1, w):
+
+        return self.canvas.create_line(
+            (x, y, x1, y1), fill=self.colors[1], width=w, tag=self.paint_tag)
+
+    def paint_clear(self, event):
         global lasx, lasy
         if self.choice == Choice.PAINT:
             w = int(self.brush_width.get())
-            line = self.canvas.create_line(
-                (lasx, lasy, event.x, event.y), fill=self.colors[1], width=w)
-            self.lines.append((line, lasx, lasy))
-
+            line = self.paint_line(lasx, lasy, event.x, event.y, w)
+            self.lines.append([line, lasx, lasy, event.x, event.y, w])
+            print(lasx, lasy, event.x, event.y)
         elif self.choice == Choice.CLEAR:
             w = int(self.clear_width.get())
             for l in self.lines:
-                (line, x, y) = l
+                (line, x, y, _, _, _) = l
                 if (x - lasx) ** 2 + (lasy - y) ** 2 < w ** 2:
                     self.canvas.delete(line)
+                    self.lines.remove(l)
         lasx, lasy = event.x, event.y
         self.cursor_tracker(event)
 
@@ -200,18 +206,24 @@ class Gui:
         if self.image is not None:
             if self.choice == Choice.UNDO:
                 if self.images_prev.len() > 0:
-                    self.image = self.images_prev.pop()
-                    self.put_image_in_canvas()
-            else:
+                    prev = self.images_prev.pop()
+                    if prev == 0:
+                        self.canvas.delete(self.paint_tag)
+                        self.lines = []
+                    else:
+                        self.image = prev
+                        self.put_image_in_canvas()
+            elif self.choice not in (Choice.PAINT, Choice.CLEAR, Choice.SELECT, Choice.SAVE):
                 self.images_prev.append(self.image.copy())
+            elif self.choice == Choice.PAINT:
+                self.images_prev.append(0)
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
                     self.image, value if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
-                self.image = self.image_processing.scale_rotate_translate(self.image \
-                                                                          , new_center=value if value else (
+                self.image = self.image_processing.scale_rotate_translate(self.image, new_center=value if value else (
                     80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
@@ -224,7 +236,6 @@ class Gui:
                 self.image = self.image_processing.shear(
                     self.image, value if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
-
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
                 water_mark_path = self.open_file_dialog()
@@ -241,14 +252,19 @@ class Gui:
             self.select()
 
     def put_image_in_canvas(self):
-        self.canvas.delete("image")
+        self.canvas.delete("image", self.paint_tag)
         img = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, image=img, anchor='nw', tag="image")
         self.canvas.image = img
 
+        for l in self.lines:
+            x, y, x1, y1, w = l[1:]
+            line = self.paint_line(x, y, x1, y1, w)
+            l[0] = line
+
     def canvas_setting(self):
         self.canvas.bind("<Button-1>", self.get_x_and_y)
-        self.canvas.bind("<B1-Motion>", self.draw)
+        self.canvas.bind("<B1-Motion>", self.paint_clear)
         self.canvas.bind('<Motion>', self.cursor_tracker)
 
     def put_paint_setting_frame(self):
@@ -380,7 +396,7 @@ class Gui:
                     posture = self.posture_queue.max_value()
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
-                    print(f"{choice=},{value=}")
+                    # print(f"{choice=},{value=}")
                     # self.choose(choice, value)
 
         except:
