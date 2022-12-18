@@ -409,8 +409,12 @@ class Gui:
                         self.s_press(None)
                     print(f"{choice=},{value=}")
                     if choice is Choice.CLICK and self.enable['mouse']:
-                        single_click()
+                        if self.input_mapper.current_choice in [Choice.PAINT,Choice.CLEAR]:
+                            click_state(Directions.DOWN)
+                        else:
+                            single_click()
                     else:
+                        click_state(Directions.UP)
                         self.choose(choice, value[0])
 
         except:
