@@ -4,7 +4,9 @@ from enum import Enum
 class Posture(Enum):
     ZERO = 0.1 #
 
-    ONE_NORMAL = 1.1  #
+    ONE_NORMAL = 1.0  #delete it 
+    ONE_LEFT = 1.1  #
+    ONE_RIGHT = 1.2  #
 
     TWO_LEFT = 2.1  #
     TWO_RIGHT = 2.2  #
