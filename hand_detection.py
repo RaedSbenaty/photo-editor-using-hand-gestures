@@ -185,7 +185,13 @@ def detect_postures(frame, hull, contour, center, defects):
     if finger_spaces_counter == 1:
         areahull = cv2.contourArea(hull)
         areacnt = cv2.contourArea(contour)
-        return Posture.ONE_NORMAL if areacnt/areahull < 0.9 else Posture.ZERO
+        
+        if areacnt/areahull > 0.9:
+            return Posture.ZERO
+
+        d1 = abs(up[0] - right[0])
+        d2 = abs(up[0] - left[0])
+        return Posture.ONE_LEFT if d1 < d2 else Posture.ONE_RIGHT
 
     if finger_spaces_counter == 2:
         nearest_point = cos_similarity(opened_defectes[0], left, right, center)
