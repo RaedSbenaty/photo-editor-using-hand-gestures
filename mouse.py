@@ -18,7 +18,6 @@ def move_mouse2(point, frame_size):
 
 def smooth_scroll(value):
     for _ in range(5):
-        print(value//abs(value))
         pyautogui.scroll(value//5)
 
 

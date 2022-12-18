@@ -365,7 +365,8 @@ class Gui:
                                       defects['simplified'])
 
                 self.posture_queue.append(res)
-
+                heighest_point =get_highest_point(contour)
+                self.traverse_point.append(heighest_point)
                 cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 0, 255), 2, cv2.LINE_AA)
 
@@ -385,19 +386,25 @@ class Gui:
 
                 if self.enable["mouse"]:
                     *s, _ = self.frame.shape
-                    print(s)
                     move_mouse2(get_highest_point(contour), s)
 
                 if self.enable["tracking"]:
                     tracking(self.frame, self.traverse_point,
                              defects['original'], contour, center)
 
-                if self.frame_counter % 30 == 0:
+                if self.frame_counter % 15 == 0:
                     posture = self.posture_queue.max_value()
                     choice = self.input_mapper.map(posture)
-                    value = get_direction_from(self.traverse_point)
-                    # print(f"{choice=},{value=}")
-                    # self.choose(choice, value)
+                    value = get_diff(self.traverse_point)
+                    mouse_need_choices = [Choice.SELECT,Choice.PAINT,Choice.COLOR_PICKER,Choice.CLEAR]
+                    if choice in mouse_need_choices and not self.enable['mouse']:
+                        print("mosue enabled")
+                        self.s_press(None)
+                    print(f"{choice=},{value=}")
+                    if choice is Choice.CLICK and self.enable['mouse']:
+                        single_click()
+                    else:   
+                        self.choose(choice, value[0])
 
         except:
             print('\n\n')

@@ -118,4 +118,4 @@ def test_case_4(mapper):
     print(mapper.map(Posture.ZERO))
 
 
-test_case_4(mapper)
+#test_case_4(mapper)
