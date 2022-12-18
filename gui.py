@@ -9,7 +9,7 @@ from tkinter.colorchooser import askcolor
 from tkinter.font import Font
 import traceback
 from PIL import Image, ImageTk, ImageGrab
-
+from threading import Thread
 from Queue import Queue
 from choice import Choice
 from constants import *
@@ -66,6 +66,7 @@ class Gui:
         self.cap = cv2.VideoCapture(0)
 
         # detection variables
+        self.is_selecting = False
         self.posture_queue = Queue(30, Choice.NOTHING)
         self.traverse_point = Queue(15, (0, 0))
         self.prev_bg_time = 0
@@ -120,6 +121,7 @@ class Gui:
 
     # save && select
     def select(self):  # Load images from the computer
+        self.is_selecting = True
         self.img_path = self.open_file_dialog()
         if self.img_path is not None:
             self.image = Image.open(self.img_path)
@@ -127,6 +129,7 @@ class Gui:
             self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
             self.images_prev.append(self.image)
             self.put_image_in_canvas()
+        self.is_selecting = False
 
     def save(self):
         if self.img_path is not None:
@@ -240,7 +243,8 @@ class Gui:
             elif self.choice == Choice.WATER_MARK_IMAGE:
                 water_mark_path = self.open_file_dialog()
                 if water_mark_path:
-                    self.image = self.image_processing.watermark_with_transparency(self.image, water_mark_path)
+                    self.image = self.image_processing.watermark_with_transparency(
+                        self.image, water_mark_path)
                     self.put_image_in_canvas()
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
@@ -248,8 +252,8 @@ class Gui:
         else:
             self.clear_paint_frame()
 
-        if self.choice == Choice.SELECT:
-            self.select()
+        if self.choice == Choice.SELECT and not self.is_selecting:
+            Thread(target=self.select).start()
 
     def put_image_in_canvas(self):
         self.canvas.delete("image", self.paint_tag)
@@ -309,14 +313,16 @@ class Gui:
         self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
         self.put_gesture(tool_bar, "Rotate", original_image, Choice.ROTATE)
         self.put_gesture(tool_bar, "Scale", original_image, Choice.SCALE)
-        self.put_gesture(tool_bar, "Translate", original_image, Choice.TRANSLATE)
+        self.put_gesture(tool_bar, "Translate",
+                         original_image, Choice.TRANSLATE)
 
         self.put_gesture(tool_bar2, "Save", original_image, Choice.SAVE)
         self.put_gesture(tool_bar2, "Skew", original_image, Choice.SKEW)
         self.put_gesture(tool_bar2, "Clear", original_image, Choice.CLEAR)
         self.put_gesture(tool_bar2, "Paint", original_image, Choice.PAINT)
 
-        self.put_gesture(tool_bar3, "Water Mark", original_image, Choice.WATER_MARK_IMAGE)
+        self.put_gesture(tool_bar3, "Water Mark",
+                         original_image, Choice.WATER_MARK_IMAGE)
         self.put_gesture(tool_bar3, "Undo", original_image, Choice.UNDO)
         self.put_gesture(tool_bar3, "Right", original_image, Choice.CLEAR)
         self.put_gesture(tool_bar3, "Left", original_image, Choice.PAINT)
@@ -365,7 +371,7 @@ class Gui:
                                       defects['simplified'])
 
                 self.posture_queue.append(res)
-                heighest_point =get_highest_point(contour)
+                heighest_point = get_highest_point(contour)
                 self.traverse_point.append(heighest_point)
                 cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 0, 255), 2, cv2.LINE_AA)
@@ -396,14 +402,15 @@ class Gui:
                     posture = self.posture_queue.max_value()
                     choice = self.input_mapper.map(posture)
                     value = get_diff(self.traverse_point)
-                    mouse_need_choices = [Choice.SELECT,Choice.PAINT,Choice.COLOR_PICKER,Choice.CLEAR]
+                    mouse_need_choices = [
+                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR]
                     if choice in mouse_need_choices and not self.enable['mouse']:
                         print("mosue enabled")
                         self.s_press(None)
                     print(f"{choice=},{value=}")
                     if choice is Choice.CLICK and self.enable['mouse']:
                         single_click()
-                    else:   
+                    else:
                         self.choose(choice, value[0])
 
         except:
