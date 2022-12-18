@@ -398,7 +398,7 @@ class Gui:
                     tracking(self.frame, self.traverse_point,
                              defects['original'], contour, center)
 
-                if self.frame_counter % 15 == 0:
+                if self.frame_counter % 10 == 0:
                     posture = self.posture_queue.max_value()
                     choice = self.input_mapper.map(posture)
                     value = get_diff(self.traverse_point)
