@@ -114,12 +114,12 @@ def hand_detection(frame, bgFrame=None):
     # global mini, maxi
 
     hull, defects, center = [None]*3
-    skin_mask = generate_skin_mask2(frame)
+    skin_mask = generate_skin_mask(frame)
 
     if bgFrame is not None:
-        # ycrcb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
-        # diff = ycbcr_substract(ycrcb_frame, bgFrame)
-        diff = brg_substract(frame, bgFrame)
+        ycrcb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
+        diff = ycbcr_substract(ycrcb_frame, bgFrame)
+        # diff = brg_substract(frame, bgFrame)
         skin_mask = diff & skin_mask
 
     # skin_mask = opening(skin_mask)
@@ -185,8 +185,8 @@ def detect_postures(frame, hull, contour, center, defects):
     if finger_spaces_counter == 1:
         areahull = cv2.contourArea(hull)
         areacnt = cv2.contourArea(contour)
-        
-        if areacnt/areahull > 0.9:
+
+        if areacnt/areahull > 0.85:
             return Posture.ZERO
 
         d1 = abs(up[0] - right[0])

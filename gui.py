@@ -334,8 +334,8 @@ class Gui:
         self.enable["mouse"] = not self.enable["mouse"]
 
     def z_press(self, z):
-        # self.bgFrame = cv2.cvtColor(self.orginal_frame, cv2.COLOR_BGR2YCrCb)
-        self.bgFrame = self.orginal_frame
+        self.bgFrame = cv2.cvtColor(self.orginal_frame, cv2.COLOR_BGR2YCrCb)
+        # self.bgFrame = self.orginal_frame
 
     def t_press(self, t):
         self.enable["tracking"] = not self.enable["tracking"]
@@ -403,7 +403,7 @@ class Gui:
                     print(f"{choice=},{value=}")
                     if choice is Choice.CLICK and self.enable['mouse']:
                         single_click()
-                    else:   
+                    else:
                         self.choose(choice, value[0])
 
         except:
