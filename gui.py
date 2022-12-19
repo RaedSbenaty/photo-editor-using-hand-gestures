@@ -212,6 +212,14 @@ class Gui:
     def change_color(self):
         self.colors = askcolor(title="Tkinter Color Chooser")
 
+    def add_water_mark_image(self):
+        water_mark_path = self.open_file_dialog()
+        if water_mark_path:
+            self.image = self.image_processing.watermark_with_transparency(
+                self.image, water_mark_path)
+            self.put_image_in_canvas()
+        self.is_selecting = False
+
     def choose(self, c, value=None):
         print("hello choose0")
         self.choice = c
@@ -233,29 +241,28 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image, value if value else 180)
+                    self.image,  value[0].value * 90 if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
                     value[0].value * 30, value[1].value * 30) if value else (80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
+                v = 1.2 if value[0] is Directions.LEFT else 0.8
                 self.image = self.image_processing.scale(
-                    self.image, value if value else 0.8)
+                    self.image, v if value else 0.8)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
-                    self.image, value if value else (-1.5, 0.5))
+                    self.image,   (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
-                water_mark_path = self.open_file_dialog()
-                if water_mark_path:
-                    self.image = self.image_processing.watermark_with_transparency(
-                        self.image, water_mark_path)
-                    self.put_image_in_canvas()
+                self.is_selecting = True
+                Thread(target= self.add_water_mark_image).start()
+
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
@@ -401,6 +408,8 @@ class Gui:
                 self.traverse_point.append(heighest_point)
                 cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 0, 255), 2, cv2.LINE_AA)
+                cv2.putText(self.frame, str(self.input_mapper.current_choice._name_), (10, 150), cv2.FONT_HERSHEY_SIMPLEX,
+                            1, (0, 255, 0), 2, cv2.LINE_AA)
 
                 cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
                 cv2.drawContours(self.frame, [hull], 0, [0, 165, 255], 2)
@@ -424,7 +433,7 @@ class Gui:
                     tracking(self.frame, self.traverse_point,
                              defects['original'], contour, center)
 
-                if self.frame_counter % 10 == 0:
+                if self.frame_counter % 1 == 0:
                     posture = self.posture_queue.max_value()
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
@@ -445,7 +454,7 @@ class Gui:
                         click_state(Directions.UP)
                         if self.enable["choosing"]:
                             self.choose(choice, value)
-                print(self.images_prev.len())
+
 
         except:
             print('\n\n')
