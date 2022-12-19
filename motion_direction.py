@@ -5,8 +5,8 @@ from Queue import Queue
 class Directions(Enum):
     LEFT = -1
     RIGHT = 1
-    UP = 1.1
-    DOWN = -1.1
+    UP = -1.1
+    DOWN = 1.1
     NO_DIR = 0
 
 
