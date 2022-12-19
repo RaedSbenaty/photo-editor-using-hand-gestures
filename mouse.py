@@ -25,10 +25,13 @@ def scroll(direction: Directions):
 
 
 def click_state(state: Directions):
-    if state is Directions.DOWN:
-        pyautogui.mouseDown(button="left")
-    elif state is Directions.UP:
-        pyautogui.mouseUp(button="left")
+    try:
+        if state is Directions.DOWN:
+            pyautogui.mouseDown(button="left")
+        elif state is Directions.UP:
+            pyautogui.mouseUp(button="left")
+    except:
+        pass
 
 
 def single_click():  # we can also call : click_state(Down) click_state(Up) to perform a click

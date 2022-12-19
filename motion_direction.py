@@ -13,7 +13,7 @@ class Directions(Enum):
 def get_direction_from(q: Queue):
     x_diff,y_diff = get_diff(q)
     x_diff, y_diff = y_diff,x_diff
-    is_up = y_diff > 0
+    is_up = y_diff < 0
     is_left = x_diff < 0
     out = [Directions.NO_DIR, Directions.NO_DIR]
     if abs(x_diff) > 30:
@@ -26,8 +26,8 @@ def get_diff(q:Queue):
     start, end = q.get_first_last()
     x_diff = end[1] - start[1]
     y_diff = end[0] - start[0]
-    if x_diff < 50:
+    if abs(x_diff) < 50:
         x_diff = 0 
-    if y_diff < 50:
+    if abs(y_diff) < 50:
         y_diff = 0 
     return x_diff,y_diff
