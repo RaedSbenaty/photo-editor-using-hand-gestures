@@ -17,11 +17,11 @@ def move_mouse2(point, frame_size):
 
 def smooth_scroll(value):
     for _ in range(5):
-        pyautogui.scroll(value//5)
+        pyautogui.scroll(value // 5)
 
 
 def scroll(direction: Directions):
-    smooth_scroll(50*int(direction.value))
+    smooth_scroll(50 * int(direction.value))
 
 
 def click_state(state: Directions):
@@ -30,5 +30,11 @@ def click_state(state: Directions):
     elif state is Directions.UP:
         pyautogui.mouseUp(button="left")
 
-def single_click(): # we can also call : click_state(Down) click_state(Up) to perform a click 
+
+def single_click():  # we can also call : click_state(Down) click_state(Up) to perform a click
     pyautogui.click(button="left")
+
+
+def double_click():
+    print("double click")
+    pyautogui.doubleClick()

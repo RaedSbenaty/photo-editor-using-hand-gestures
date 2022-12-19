@@ -71,13 +71,11 @@ class ImageProcessing:
         size_transform = np.abs(shear[:2, :2])
         w1, h1 = (size_transform @ img.size).astype(int)
 
-        print(shear)
         '''
         The original implementation was assigning old coordinates to new 
         coordinates on the left-hand side, so this needs to be inverted
         '''
         shear = inv(shear)
-        print(shear)
 
         return img.transform(
             size=(w1, h1),
