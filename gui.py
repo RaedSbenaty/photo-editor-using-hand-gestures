@@ -358,9 +358,8 @@ class Gui:
         self.enable["mouse"] = not self.enable["mouse"]
 
     def z_press(self, z):
-        # self.bgFrame = cv2.cvtColor(self.orginal_frame, cv2.COLOR_BGR2YCrCb)
-        self.bgFrame = self.orginal_frame
-        print("hello from z")
+        self.bgFrame = cv2.cvtColor(self.orginal_frame, cv2.COLOR_BGR2YCrCb)
+        # self.bgFrame = self.orginal_frame
 
     def t_press(self, t):
         self.enable["tracking"] = not self.enable["tracking"]
