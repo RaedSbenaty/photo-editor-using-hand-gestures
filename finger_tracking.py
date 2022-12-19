@@ -1,45 +1,6 @@
 import numpy as np
 import cv2
-
-
-def get_highest_point(contour):
-    return min(contour, key=lambda c: c[0][1]).squeeze()
-
-    # out = (float('inf'), float('inf'))
-    # for c in contour:
-    #     if out[1] > c[0][1]:
-    #         out = c[0]
-
-    # print(res, out)
-
-    # return out
-
-
-#
-#
-# def farthest_point(defects, contour, centroid):
-#     out = None
-#     if defects is not None and centroid is not None:
-#
-#         s = defects[:, 0][:, 0]
-#
-#         cx, cy = centroid
-#
-#         x = np.array(contour[s][:, 0][:, 0], dtype=np.float)
-#         y = np.array(contour[s][:, 0][:, 1], dtype=np.float)
-#
-#         xp = cv2.pow(cv2.subtract(x, cx), 2)
-#         yp = cv2.pow(cv2.subtract(y, cy), 2)
-#         dist = cv2.sqrt(cv2.add(xp, yp))
-#
-#         dist_max_i = np.argmax(dist)
-#
-#         if dist_max_i < len(s):
-#             farthest_defect = s[dist_max_i]
-#             out = tuple(contour[farthest_defect][0])
-#
-#     return out
-#
+from utils import get_highest_point
 
 def draw_circles(frame, traverse_point):
     for i in range(len(traverse_point.q)):

@@ -5,7 +5,6 @@ import pyautogui as p
 
 def convert(point, frame_size):
     sw, sh = pyautogui.size()
-    print(f"{sw=},{sh=}")
     fh, fw = frame_size
     rh, rw = sh / fh, sw / fw
     return point[0] * rw, point[1] * rh

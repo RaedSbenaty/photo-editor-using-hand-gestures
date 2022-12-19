@@ -9,7 +9,8 @@ class Input_Mapper:
             Choice.NOTHING: {
                 Posture.ZERO: Choice.NOTHING,
 
-                Posture.ONE_NORMAL: Choice.PAINT,
+                Posture.ONE_LEFT: Choice.PAINT,
+                Posture.ONE_RIGHT: Choice.PAINT,
 
                 Posture.TWO_LEFT: Choice.SCALE,
                 Posture.TWO_RIGHT: Choice.ROTATE,
@@ -92,7 +93,7 @@ def test_case_1(mapper):
 # test case 2: select,paint,size_inc,click,nothing
 def test_case_2(mapper):
     print(mapper.map(Posture.FIVE_LEFT))
-    print(mapper.map(Posture.ONE_NORMAL))
+    print(mapper.map(Posture.ONE_LEFT))
     print(mapper.map(Posture.TWO_LEFT))
     print(mapper.map(Posture.TWO_MIDDLE))
     print(mapper.map(Posture.ZERO))
@@ -102,7 +103,7 @@ def test_case_2(mapper):
 
 def test_case_3(mapper):
     print(mapper.map(Posture.TWO_RIGHT))
-    print(mapper.map(Posture.ONE_NORMAL))
+    print(mapper.map(Posture.ONE_LEFT))
     print(mapper.map(Posture.TWO_LEFT))
     print(mapper.map(Posture.TWO_MIDDLE))
     print(mapper.map(Posture.ZERO))
@@ -112,7 +113,7 @@ def test_case_3(mapper):
 
 def test_case_4(mapper):
     print(mapper.map(Posture.TWO_MIDDLE))
-    print(mapper.map(Posture.ONE_NORMAL))
+    print(mapper.map(Posture.ONE_LEFT))
     print(mapper.map(Posture.TWO_LEFT))
     print(mapper.map(Posture.TWO_MIDDLE))
     print(mapper.map(Posture.ZERO))
