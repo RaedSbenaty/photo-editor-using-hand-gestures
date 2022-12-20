@@ -268,6 +268,18 @@ class Gui:
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
+        elif self.input_mapper.current_choice == Choice.PAINT:
+            if self.choice == Choice.SIZE_INC:
+                self.brush_width += 2
+            elif self.choice == Choice.SIZE_DEC:
+                self.brush_width -= 2
+            elif self.choice == Choice.COLOR_PICKER:
+                self.change_color()
+        elif self.input_mapper.current_choice == Choice.CLEAR:
+            if self.choice == Choice.SIZE_INC:
+                self.clear_width += 2
+            elif self.choice == Choice.SIZE_DEC:
+                self.clear_width -= 2
         else:
             self.clear_paint_frame()
 
