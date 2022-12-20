@@ -127,11 +127,12 @@ class Gui:
     # save && select
     def select(self):  # Load images from the computer
         self.img_path = self.open_file_dialog()
-        print("hello self,path",self.img_path)
+        print("hello self,path", self.img_path)
         if self.img_path is not None and len(self.img_path) > 5:
             self.image = Image.open(self.img_path)
             # print(self.image)
             self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
+            self.images_prev.append(self.image)
             self.images_prev.append(self.image)
             self.put_image_in_canvas()
         self.input_mapper.current_choice = Choice.NOTHING
@@ -221,8 +222,8 @@ class Gui:
         self.is_selecting = False
 
     def choose(self, c, value=None):
-        print("hello choose0")
         self.choice = c
+        self.canvas.delete(self.deleted_tag)  # this for deleting cursor tracker
         if self.image is not None:
             if self.choice == Choice.UNDO:
                 if self.images_prev.len() > 0:
@@ -233,6 +234,8 @@ class Gui:
                     else:
                         self.image = prev
                         self.put_image_in_canvas()
+                    if self.images_prev.len() == 0:  # to not fail in elif
+                        self.images_prev.append(self.image.copy())
             elif self.choice not in (Choice.PAINT, Choice.CLEAR, Choice.SELECT, Choice.SAVE, Choice.NOTHING) and \
                     self.images_prev.q[-1] != self.image:
                 self.images_prev.append(self.image.copy())
@@ -241,7 +244,7 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image,  value[0].value * 90 if value else 90)
+                    self.image, value[0].value * 90 if value else 90)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
@@ -250,19 +253,18 @@ class Gui:
             elif self.choice == Choice.SCALE:
                 v = 1.2 if value and value[0] is Directions.LEFT else 0.8
                 self.image = self.image_processing.scale(
-                    self.image, v )
+                    self.image, v)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
-                    self.image,   (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
+                    self.image, (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
                 self.is_selecting = True
-                Thread(target= self.add_water_mark_image).start()
-
+                Thread(target=self.add_water_mark_image).start()
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
@@ -403,13 +405,16 @@ class Gui:
                                       defects['simplified'])
 
                 self.posture_queue.append(res)
-                heighest_point = get_highest_point(contour)
-                self.traverse_point.append(heighest_point)
+                highest_point = get_highest_point(contour)
+                self.traverse_point.append(highest_point)
                 cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 0, 255), 2, cv2.LINE_AA)
-                cv2.putText(self.frame, str(self.input_mapper.current_choice._name_), (10, 150), cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.putText(self.frame, str(self.input_mapper.current_choice._name_), (10, 100),
+                            cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
-
+                if self.enable["choosing"]:
+                    cv2.putText(self.frame, "Postures is Enabled", (500, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                                1, (255, 0, 0), 2, cv2.LINE_AA)
                 cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
                 cv2.drawContours(self.frame, [hull], 0, [0, 165, 255], 2)
                 cv2.drawContours(drawing, [hull], 0, [0, 165, 255], 2)
@@ -443,7 +448,8 @@ class Gui:
                         print("mosue enabled")
                         self.s_press(None)
                     # else mosue off  
-                    elif choice is not Choice.CLICK and self.enable['mouse']: # why ?? to stop the mouse when it is not important 
+                    elif choice is not Choice.CLICK and self.enable[
+                        'mouse']:  # why ?? to stop the mouse when it is not important
                         self.s_press(None)
                     print(f"{choice=},{value=}, {self.enable['mouse']=}")
                     if choice is Choice.CLICK and self.enable['mouse']:
