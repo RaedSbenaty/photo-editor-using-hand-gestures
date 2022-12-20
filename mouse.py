@@ -41,3 +41,5 @@ def single_click():  # we can also call : click_state(Down) click_state(Up) to p
 def double_click():
     print("double click")
     pyautogui.doubleClick()
+
+

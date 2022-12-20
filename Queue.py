@@ -14,7 +14,7 @@ class Queue:
         self.q.append(value)
 
     def max_value(self):
-        if len(self.q) < 10:
+        if len(self.q) == 0:
             return self.default_value
         c = {}
         for value in self.q:
@@ -31,7 +31,3 @@ class Queue:
 
     def len(self):
         return len(self.q)
-
-q = Queue(20)
-
-print(q.max_value())

@@ -134,7 +134,7 @@ class Gui:
             self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
             self.images_prev.append(self.image)
             self.put_image_in_canvas()
-        self.choice = Choice.NOTHING
+        self.input_mapper.current_choice = Choice.NOTHING
         if self.enable['mouse']:
             self.s_press(None)
         self.is_selecting = False
@@ -438,18 +438,24 @@ class Gui:
                     value = get_direction_from(self.traverse_point)
                     mouse_need_choices = [
                         Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR]
+                    # if choice need mouse and mouse is not enabled and choice is enabled ==> enable mouse 
                     if choice in mouse_need_choices and not self.enable['mouse'] and self.enable["choosing"]:
                         print("mosue enabled")
                         self.s_press(None)
-                    elif self.enable['mouse']:
+                    # else mosue off  
+                    elif choice is not Choice.CLICK and self.enable['mouse']: # why ?? to stop the mouse when it is not important 
                         self.s_press(None)
                     print(f"{choice=},{value=}, {self.enable['mouse']=}")
                     if choice is Choice.CLICK and self.enable['mouse']:
+                        print("this is a click")
                         if self.input_mapper.current_choice in [Choice.PAINT, Choice.CLEAR]:
+                            print("long click")
                             click_state(Directions.DOWN)
                         else:
+                            print("double click")
                             double_click()
                     else:
+                        print("else ")
                         click_state(Directions.UP)
                         if self.enable["choosing"]:
                             self.choose(choice, value)
