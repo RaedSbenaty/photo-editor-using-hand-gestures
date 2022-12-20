@@ -241,16 +241,16 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image,  value[0].value * 90 if value else 180)
+                    self.image,  value[0].value * 90 if value else 90)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
                     value[0].value * 30, value[1].value * 30) if value else (80, 80))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
-                v = 1.2 if value[0] is Directions.LEFT else 0.8
+                v = 1.2 if value and value[0] is Directions.LEFT else 0.8
                 self.image = self.image_processing.scale(
-                    self.image, v if value else 0.8)
+                    self.image, v )
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
