@@ -71,10 +71,10 @@ class Input_Mapper:
         return out
 
     def get_menu_of(self, choice: Choice):
-        return self.state_graph.get(choice, self.state_graph[Choice.NOTHING])
+        return self.state_graph.get(choice, {})
 
     def get_choice_or_default(self, posture) -> Choice:
-        if posture is Posture.THREE_RIGHT:
+        if posture is Posture.ZERO:
             return Choice.NOTHING
         current_menu = self.get_menu_of(self.current_choice)
         # root_choice = self.state_graph[Choice.NOTHING][posture]
