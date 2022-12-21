@@ -45,7 +45,7 @@ class ImageProcessing:
         e = cosine / sy
         f = y - nx * d - ny * e
         # print(image.size)
-        return image.transform((IMAGE_WIDTH + abs(nx) * self.count_t, IMAGE_HIEGHT + abs(ny) * self.count_t),
+        return image.transform((IMAGE_WIDTH * 2, IMAGE_HIEGHT * 2),
                                Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
 
     def scale(self, img, value):
