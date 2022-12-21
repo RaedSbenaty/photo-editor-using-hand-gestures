@@ -56,7 +56,7 @@ class ImageProcessing:
     def shear(self, img: Image, angles=(0, 0)) -> Image:
         x_angle, y_angle = angles
         w0, h0 = img.size
-        angles = np.radians((x_angle, y_angle))
+        angles = np.radians((x_angle, int(y_angle)))
         tanx, tany = np.tan(angles)
         cosx, cosy = np.cos(angles)
 
