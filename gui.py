@@ -106,7 +106,7 @@ class Gui:
         self.img_path = None
 
         self.choice = Choice.NOTHING
-        self.colors = ('red', 'blue')
+        self.colors = ('red', BACKGROUND1)
         self.brush_width = StringVar(value=5)
         self.clear_width = StringVar(value=20)
         # this for the moving shape with the cursor (Paint && Clear)
@@ -207,8 +207,11 @@ class Gui:
         # print("Pointer is currently at %d, %d" % (x, y))
 
     def change_color(self):
-        self.colors = askcolor(title="Tkinter Color Chooser")
+        dialog = Toplevel(self.root)
+        dialog.geometry("0x0+500+20")
+        self.colors = askcolor(parent=dialog, title="Tkinter Color Chooser")
         self.is_selecting = False
+        dialog.destroy()
 
     def add_water_mark_image(self):
         water_mark_path = self.open_file_dialog()
@@ -260,7 +263,7 @@ class Gui:
                 self.input_mapper.current_choice = Choice.NOTHING
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
-                    self.image, (value[0] * 2, value[1]* 2) if value else (-1.5, 0.5))
+                    self.image, (value[0] * 2, value[1] * 2) if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
 
             elif self.choice == Choice.WATER_MARK_IMAGE and not self.is_selecting:
@@ -271,9 +274,9 @@ class Gui:
             self.put_paint_setting_frame()
         elif self.input_mapper.current_choice == Choice.PAINT:
             if self.choice == Choice.SIZE_INC:
-                self.brush_width.set(str(int(self.brush_width.get())+2))
+                self.brush_width.set(str(int(self.brush_width.get()) + 2))
             elif self.choice == Choice.SIZE_DEC:
-                self.brush_width.set(str(int(self.brush_width.get())-2))
+                self.brush_width.set(str(int(self.brush_width.get()) - 2))
             elif self.choice == Choice.COLOR_PICKER and not self.is_selecting:
                 self.is_selecting = True
                 Thread(target=self.change_color).start()
@@ -452,7 +455,8 @@ class Gui:
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
                     mouse_need_choices = [
-                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR, Choice.CLICK, Choice.WATER_MARK_IMAGE]
+                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR, Choice.CLICK,
+                        Choice.WATER_MARK_IMAGE]
                     # if choice need mouse and mouse is not enabled  ==> enable mouse
                     if choice in mouse_need_choices and not self.enable['mouse']:
                         self.enable['mouse'] = True
