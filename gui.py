@@ -244,7 +244,7 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image, value[0] * 45 if value else 90)
+                    self.image, value[0] * 90 if value else 90)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
