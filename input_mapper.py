@@ -80,11 +80,15 @@ class Input_Mapper:
         # root_choice = self.state_graph[Choice.NOTHING][posture]
         return current_menu.get(posture, self.current_choice)
 
+    def get_posture_of(self, choice: Choice) -> Posture:
+        return [k for k, v in self.state_graph[Choice.NOTHING].items() if v == choice][0]
+
 
 mapper = Input_Mapper()
 
-
 # test case 1: scale,select,click,save
+
+
 def test_case_1(mapper):
     print(mapper.map(Posture.TWO_LEFT))
     print(mapper.map(Posture.FIVE_LEFT))

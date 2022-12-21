@@ -8,6 +8,9 @@ import math
 
 class ImageProcessing:
 
+    def __init__(self):
+        self.count_t = 0
+
     def watermark_with_transparency(self, img, watermark_image_path, position=(0, 0)):
         base_image = img.convert('RGBA')
         watermark = Image.open(watermark_image_path).convert('RGBA')
@@ -30,6 +33,7 @@ class ImageProcessing:
         sx = sy = 1.0
         if new_center:
             (nx, ny) = new_center
+            self.count_t += 1
         if scale:
             (sx, sy) = scale
         cosine = math.cos(angle)
@@ -41,7 +45,8 @@ class ImageProcessing:
         e = cosine / sy
         f = y - nx * d - ny * e
         # print(image.size)
-        return image.transform((IMAGE_WIDTH, IMAGE_HIEGHT), Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
+        return image.transform((IMAGE_WIDTH + abs(nx) * self.count_t, IMAGE_HIEGHT + abs(ny) * self.count_t),
+                               Image.AFFINE, (a, b, c, d, e, f), resample=Image.BICUBIC)
 
     def scale(self, img, value):
         w, h = img.size

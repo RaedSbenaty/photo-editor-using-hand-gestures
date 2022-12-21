@@ -132,6 +132,7 @@ class Gui:
             # print(self.image)
             self.image = self.image.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
             self.images_prev.append(self.image)
+            self.images_prev.append(self.image)
             self.put_image_in_canvas()
         self.input_mapper.current_choice = Choice.NOTHING
         if self.enable['mouse']:
@@ -210,6 +211,7 @@ class Gui:
 
     def change_color(self):
         self.colors = askcolor(title="Tkinter Color Chooser")
+        self.is_selecting = False 
 
     def add_water_mark_image(self):
         water_mark_path = self.open_file_dialog()
@@ -220,8 +222,9 @@ class Gui:
         self.is_selecting = False
 
     def choose(self, c, value=None):
-        print("hello choose0")
         self.choice = c
+        # this for deleting cursor tracker
+        self.canvas.delete(self.deleted_tag)
         if self.image is not None:
             if self.choice == Choice.UNDO:
                 if self.images_prev.len() > 0:
@@ -232,6 +235,8 @@ class Gui:
                     else:
                         self.image = prev
                         self.put_image_in_canvas()
+                    if self.images_prev.len() == 0:  # to not fail in elif
+                        self.images_prev.append(self.image.copy())
             elif self.choice not in (Choice.PAINT, Choice.CLEAR, Choice.SELECT, Choice.SAVE, Choice.NOTHING) and \
                     self.images_prev.q[-1] != self.image:
                 self.images_prev.append(self.image.copy())
@@ -240,7 +245,7 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image,  value[0].value * 90 if value else 180)
+                    self.image, value[0].value * 90 if value else 90)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
@@ -248,22 +253,38 @@ class Gui:
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE and value[0] is not Directions.NO_DIR:
                 v = 1.2 if value[0] is Directions.LEFT else 0.8
+            elif self.choice == Choice.SCALE:
+                v = 1.2 if value and value[0] is Directions.LEFT else 0.8
                 self.image = self.image_processing.scale(
-                    self.image, v if value else 0.8)
+                    self.image, v)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
-                    self.image,   (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
+                    self.image, (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
                 self.is_selecting = True
                 Thread(target=self.add_water_mark_image).start()
+                Thread(target=self.add_water_mark_image).start()
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
+        elif self.input_mapper.current_choice == Choice.PAINT:
+            if self.choice == Choice.SIZE_INC:
+                self.brush_width.set(str(int(self.brush_width.get())+2))
+            elif self.choice == Choice.SIZE_DEC:
+                self.brush_width.set(str(int(self.brush_width.get())-2))
+            elif self.choice == Choice.COLOR_PICKER and not self.is_selecting:
+                self.is_selecting = True 
+                Thread(target=self.change_color).start()
+        elif self.input_mapper.current_choice == Choice.CLEAR:
+            if self.choice == Choice.SIZE_INC:
+                self.clear_width += 2
+            elif self.choice == Choice.SIZE_DEC:
+                self.clear_width -= 2
         else:
             self.clear_paint_frame()
 
@@ -399,13 +420,16 @@ class Gui:
                                       defects['simplified'])
 
                 self.posture_queue.append(res)
-                heighest_point = get_highest_point(contour)
-                self.traverse_point.append(heighest_point)
+                highest_point = get_highest_point(contour)
+                self.traverse_point.append(highest_point)
                 cv2.putText(self.frame, str(self.posture_queue.max_value()._name_), (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 0, 255), 2, cv2.LINE_AA)
-                cv2.putText(self.frame, str(self.input_mapper.current_choice._name_), (10, 150), cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.putText(self.frame, str(self.input_mapper.current_choice._name_), (10, 100),
+                            cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
-
+                if self.enable["choosing"]:
+                    cv2.putText(self.frame, "Postures is Enabled", (500, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                                1, (255, 0, 0), 2, cv2.LINE_AA)
                 cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
                 cv2.drawContours(self.frame, [hull], 0, [0, 165, 255], 2)
                 cv2.drawContours(drawing, [hull], 0, [0, 165, 255], 2)
@@ -431,13 +455,14 @@ class Gui:
                         Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR, Choice.CLICK]
                     # if choice need mouse and mouse is not enabled  ==> enable mouse
                     if choice in mouse_need_choices and not self.enable['mouse']:
-                        self.s_press(None)
+                        self.enable['mouse'] = True
                         print(f"{self.enable['mouse']=}")
                     # else stop the mouse because there is no need to be enabled
                     else:
-                        self.s_press(None)
+                        self.enable['mouse'] = False
                     print(f"{choice=},{value=}, {self.enable['mouse']=}")
-                    if choice is Choice.CLICK:# choice must not be click when the mouse is not enabled so the second condition must always be true  and self.enable['mouse']:
+                    # choice must not be click when the mouse is not enabled so the second condition must always be true  and self.enable['mouse']:
+                    if choice is Choice.CLICK:
                         print("this is a click")
                         if self.input_mapper.current_choice in [Choice.PAINT, Choice.CLEAR]:
                             print("long click")
