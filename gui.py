@@ -1,7 +1,6 @@
 # https://www.pythonguis.com/faq/pack-place-and-grid-in-tkinter/
 
 import os
-import time
 from tkinter import *
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfilename
@@ -10,8 +9,6 @@ from tkinter.font import Font
 import traceback
 from PIL import Image, ImageTk, ImageGrab
 from threading import Thread
-from Queue import Queue
-from choice import Choice
 from constants import *
 import imageProcessing
 from hand_detection import *
@@ -177,7 +174,6 @@ class Gui:
         lasx, lasy = event.x, event.y
 
     def paint_line(self, x, y, x1, y1, w):
-
         return self.canvas.create_line(
             (x, y, x1, y1), fill=self.colors[1], width=w, tag=self.paint_tag)
 
@@ -223,6 +219,8 @@ class Gui:
 
     def choose(self, c, value=None):
         self.choice = c
+        if value is not None:
+            value = (int(value[0].value), int(value[1].value))
         self.canvas.delete(self.deleted_tag)  # this for deleting cursor tracker
         if self.image is not None:
             if self.choice == Choice.UNDO:
@@ -244,11 +242,11 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image, value[0].value * 90 if value else 90)
+                    self.image, value[0] * 45 if value else 90)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
-                    value[0].value * 30, value[1].value * 30) if value else (80, 80))  # tuple
+                    value[0] * 30, value[1] * 30) if value else (40, 40))  # tuple
                 self.put_image_in_canvas()
             elif self.choice == Choice.SCALE:
                 v = 1.2 if value and value[0] is Directions.LEFT else 0.8
@@ -259,7 +257,7 @@ class Gui:
                 self.save2()
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
-                    self.image, (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
+                    self.image, (value[0] * 2, value[1]* 2) if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
@@ -272,7 +270,7 @@ class Gui:
             if self.choice == Choice.SIZE_INC:
                 self.brush_width += 2
             elif self.choice == Choice.SIZE_DEC:
-                self.brush_width -= 2
+                 self.brush_width -= 2
             elif self.choice == Choice.COLOR_PICKER:
                 self.change_color()
         elif self.input_mapper.current_choice == Choice.CLEAR:
@@ -284,6 +282,7 @@ class Gui:
             self.clear_paint_frame()
 
         if self.choice == Choice.SELECT and not self.is_selecting:
+            self.canvas.delete(self.paint_tag)
             self.is_selecting = True
             Thread(target=self.select).start()
 
@@ -329,9 +328,6 @@ class Gui:
             widgets.destroy()
 
     def setting_frame_widgets(self):
-        img = Image.open("images/img.png")
-        original_image = img.resize((100, 100))
-        original_image = ImageTk.PhotoImage(original_image)
 
         tool_bar = Frame(self.setting_frame, width=90, bg=BACKGROUND2)
         tool_bar.pack(side='left', fill='both', padx=5, pady=5, expand=True)
@@ -342,24 +338,29 @@ class Gui:
         tool_bar3 = Frame(self.setting_frame, width=90, bg=BACKGROUND2)
         tool_bar3.pack(side='right', fill='both', padx=5, pady=5, expand=True)
 
-        self.put_gesture(tool_bar, "Select", original_image, Choice.SELECT)
-        self.put_gesture(tool_bar, "Rotate", original_image, Choice.ROTATE)
-        self.put_gesture(tool_bar, "Scale", original_image, Choice.SCALE)
+        self.put_gesture(tool_bar, "Select", Choice.SELECT)
+        self.put_gesture(tool_bar, "Rotate", Choice.ROTATE)
+        self.put_gesture(tool_bar, "Scale", Choice.SCALE)
         self.put_gesture(tool_bar, "Translate",
-                         original_image, Choice.TRANSLATE)
+                         Choice.TRANSLATE)
 
-        self.put_gesture(tool_bar2, "Save", original_image, Choice.SAVE)
-        self.put_gesture(tool_bar2, "Skew", original_image, Choice.SKEW)
-        self.put_gesture(tool_bar2, "Clear", original_image, Choice.CLEAR)
-        self.put_gesture(tool_bar2, "Paint", original_image, Choice.PAINT)
+        self.put_gesture(tool_bar2, "Save", Choice.SAVE)
+        self.put_gesture(tool_bar2, "Skew", Choice.SKEW)
+        self.put_gesture(tool_bar2, "Clear", Choice.CLEAR)
+        self.put_gesture(tool_bar2, "Paint", Choice.PAINT)
 
-        self.put_gesture(tool_bar3, "Water Mark",
-                         original_image, Choice.WATER_MARK_IMAGE)
-        self.put_gesture(tool_bar3, "Undo", original_image, Choice.UNDO)
-        self.put_gesture(tool_bar3, "Right", original_image, Choice.CLEAR)
-        self.put_gesture(tool_bar3, "Left", original_image, Choice.PAINT)
+        self.put_gesture(tool_bar3, "Water Mark", Choice.WATER_MARK_IMAGE)
+        self.put_gesture(tool_bar3, "Undo", Choice.UNDO)
+        # self.put_gesture(tool_bar3, "Right", Choice.CLEAR)
+        # self.put_gesture(tool_bar3, "Left", Choice.PAINT)
 
-    def put_gesture(self, root, text, image, choice):
+    def put_gesture(self, root, text, choice):
+        path = f"postures/{self.input_mapper.get_posture_of(choice).name}.PNG"
+        print(path)
+        img = Image.open(path)
+        image = img.resize((100, 100))
+        image = ImageTk.PhotoImage(image)
+
         c = Canvas(root, width=100, height=100, bg=BACKGROUND1)
         c.pack(fill='both', padx=2, pady=2)
         c.create_image(0, 0, image=image, anchor='nw', tag="image")
@@ -425,8 +426,8 @@ class Gui:
                             cv2.FONT_HERSHEY_SIMPLEX,
                             1, (0, 255, 0), 2, cv2.LINE_AA)
                 if self.enable["choosing"]:
-                    cv2.putText(self.frame, "Postures is Enabled", (500, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                                1, (255, 0, 0), 2, cv2.LINE_AA)
+                    cv2.putText(self.frame, "Postures are Enabled", (300, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                                1, (255, 0, 0), 1, cv2.LINE_AA)
                 cv2.drawContours(drawing, [contour], 0, [155, 100, 175], 2)
                 cv2.drawContours(self.frame, [hull], 0, [0, 165, 255], 2)
                 cv2.drawContours(drawing, [hull], 0, [0, 165, 255], 2)
