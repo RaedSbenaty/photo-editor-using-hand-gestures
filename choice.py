@@ -17,3 +17,4 @@ class Choice(Enum):
     COLOR_PICKER = 13 #
     UNDO = 14 #
     WATER_MARK_IMAGE = 15
+    WAIT=16

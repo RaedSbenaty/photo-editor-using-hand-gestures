@@ -67,7 +67,7 @@ class Gui:
 
         # detection variables
         self.is_selecting = False
-        self.posture_queue = Queue(30, Choice.NOTHING)
+        self.posture_queue = Queue(20, Choice.NOTHING)
         self.traverse_point = Queue(15, (0, 0))
         self.prev_bg_time = 0
         self.bgFrame = None
@@ -132,7 +132,7 @@ class Gui:
             self.images_prev.append(self.image)
             self.images_prev.append(self.image)
             self.put_image_in_canvas()
-        self.input_mapper.current_choice = Choice.NOTHING
+        self.input_mapper.current_choice = Choice.WAIT
         if self.enable['mouse']:
             self.s_press(None)
         self.is_selecting = False
@@ -211,6 +211,7 @@ class Gui:
         dialog.geometry("0x0+500+20")
         self.colors = askcolor(parent=dialog, title="Tkinter Color Chooser")
         self.is_selecting = False
+        self.input_mapper.current_choice = Choice.WAIT
         dialog.destroy()
 
     def add_water_mark_image(self):
@@ -247,20 +248,20 @@ class Gui:
 
             if self.choice == Choice.ROTATE:
                 self.image = self.image_processing.rotate(
-                    self.image, value[0] * 90 if value else 90)
+                    self.image, value[0] * 180 if value else 180)
                 self.put_image_in_canvas()  # do not put it out
             elif self.choice == Choice.TRANSLATE:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
                     value[0] * 30, value[1] * 30) if value else (40, 40))  # tuple
                 self.put_image_in_canvas()
-            elif self.choice == Choice.SCALE and value[0] is not Directions.NO_DIR:
-                v = 1.2 if value[0] is Directions.LEFT else 0.8
+            elif self.choice == Choice.SCALE and value[0] != 0:
+                v = 1.2 if value[0] == 1 else 0.8
                 self.image = self.image_processing.scale(
                     self.image, v)
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
-                self.input_mapper.current_choice = Choice.NOTHING
+                self.input_mapper.current_choice = Choice.WAIT
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
                     self.image, (value[0] * 2, value[1] * 2) if value else (-1.5, 0.5))
@@ -277,14 +278,14 @@ class Gui:
                 self.brush_width.set(str(int(self.brush_width.get()) + 2))
             elif self.choice == Choice.SIZE_DEC:
                 self.brush_width.set(str(int(self.brush_width.get()) - 2))
-            elif self.choice == Choice.COLOR_PICKER and not self.is_selecting:
-                self.is_selecting = True
-                Thread(target=self.change_color).start()
+        elif self.choice == Choice.COLOR_PICKER and not self.is_selecting:
+            self.is_selecting = True
+            Thread(target=self.change_color).start()
         elif self.input_mapper.current_choice == Choice.CLEAR:
             if self.choice == Choice.SIZE_INC:
-                self.clear_width += 2
+                self.clear_width.set(str(int(self.clear_width.get()) + 2))
             elif self.choice == Choice.SIZE_DEC:
-                self.clear_width -= 2
+                self.clear_width.set(str(int(self.clear_width.get()) - 2))
         else:
             self.clear_paint_frame()
 
@@ -363,7 +364,6 @@ class Gui:
 
     def put_gesture(self, root, text, choice):
         path = f"postures/{self.input_mapper.get_posture_of(choice).name}.PNG"
-        print(path)
         img = Image.open(path)
         image = img.resize((100, 100))
         image = ImageTk.PhotoImage(image)
@@ -471,6 +471,8 @@ class Gui:
                         if self.input_mapper.current_choice in [Choice.PAINT, Choice.CLEAR]:
                             print("long click")
                             click_state(Directions.DOWN)
+                        elif self.input_mapper.current_choice is Choice.COLOR_PICKER:
+                            single_click()
                         else:
                             print("double click")
                             double_click()
@@ -490,7 +492,7 @@ class Gui:
         self.show_frames((frm, self.video_canvas),
                          (drawing, self.drawing_canvas))
         # Repeat after an interval to capture continiously
-        self.video_canvas.after(5, self.get_new_frame)
+        self.video_canvas.after(20, self.get_new_frame)
 
     def show_frames(self, *frames):
         for frame, canvas in frames:

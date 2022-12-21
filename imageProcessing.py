@@ -10,6 +10,8 @@ class ImageProcessing:
 
     def __init__(self):
         self.count_t = 0
+        self.translate_calling = False
+        self.translate_value = [0, 0]
 
     def watermark_with_transparency(self, img, watermark_image_path, position=(0, 0)):
         base_image = img.convert('RGBA')
@@ -23,9 +25,14 @@ class ImageProcessing:
         return base_image
 
     def rotate(self, img, rotation=180):
-        return img.rotate(rotation)
+        w, h = (img.size[0] / 4 + self.translate_value[0], img.size[1] / 4 + self.translate_value[1]) \
+            if self.translate_calling else (img.size[0] / 2, img.size[1] / 2)
+        return img.rotate(rotation, center=(w, h))
+        # img =img.resize((IMAGE_WIDTH, IMAGE_HIEGHT))
+        # return img.rotate(rotation)
 
     def scale_rotate_translate(self, image, angle=0, center=(0, 0), new_center=None, scale=None, expand=False):
+        self.translate_calling = True
         if center is None:
             return image.rotate(angle)
         angle = -angle / 180.0 * math.pi
@@ -33,6 +40,9 @@ class ImageProcessing:
         sx = sy = 1.0
         if new_center:
             (nx, ny) = new_center
+            self.translate_value[0] += nx
+            self.translate_value[1] += ny
+
             self.count_t += 1
         if scale:
             (sx, sy) = scale

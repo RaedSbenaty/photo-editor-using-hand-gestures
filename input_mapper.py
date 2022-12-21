@@ -55,6 +55,9 @@ class Input_Mapper:
             },
             Choice.COLOR_PICKER: {
                 Posture.TWO_MIDDLE: Choice.CLICK
+            },
+            Choice.WAIT: {
+                Posture.ZERO : Choice.NOTHING
             }
 
         }
@@ -65,8 +68,7 @@ class Input_Mapper:
         assert (type(posture) is Posture)
         out = self.get_choice_or_default(posture)
         if out not in [Choice.SIZE_INC, Choice.SIZE_DEC,
-                       Choice.CLICK,
-                       Choice.COLOR_PICKER]:  # change the state only if the new choice has nested postures
+                       Choice.CLICK,]:  # change the state only if the new choice has nested postures
             self.current_choice = out
         return out
 
