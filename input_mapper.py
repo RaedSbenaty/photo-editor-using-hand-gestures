@@ -20,7 +20,7 @@ class Input_Mapper:
                 Posture.THREE_RIGHT: Choice.NOTHING,  # unused
                 Posture.THREE_MIDDLE: Choice.NOTHING,  # unused
 
-                Posture.FOUR_RIGHT: Choice.WATER_MARK_IMAGE,  # unsused
+                Posture.FOUR_RIGHT: Choice.WATER_MARK_IMAGE,
                 Posture.FOUR_LEFT: Choice.CLEAR,
 
                 Posture.FIVE_LEFT: Choice.SELECT,
@@ -86,8 +86,9 @@ class Input_Mapper:
 
 mapper = Input_Mapper()
 
-
 # test case 1: scale,select,click,save
+
+
 def test_case_1(mapper):
     print(mapper.map(Posture.TWO_LEFT))
     print(mapper.map(Posture.FIVE_LEFT))
