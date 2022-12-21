@@ -20,7 +20,7 @@ class Input_Mapper:
                 Posture.THREE_RIGHT: Choice.NOTHING,  # unused
                 Posture.THREE_MIDDLE: Choice.NOTHING,  # unused
 
-                Posture.FOUR_RIGHT: Choice.WATER_MARK_IMAGE,  # unsused
+                Posture.FOUR_RIGHT: Choice.WATER_MARK_IMAGE,
                 Posture.FOUR_LEFT: Choice.CLEAR,
 
                 Posture.FIVE_LEFT: Choice.SELECT,

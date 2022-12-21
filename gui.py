@@ -1,7 +1,6 @@
 # https://www.pythonguis.com/faq/pack-place-and-grid-in-tkinter/
 
 import os
-import time
 from tkinter import *
 from tkinter import filedialog
 from tkinter.filedialog import asksaveasfilename
@@ -127,7 +126,7 @@ class Gui:
     # save && select
     def select(self):  # Load images from the computer
         self.img_path = self.open_file_dialog()
-        print("hello self,path",self.img_path)
+        print("hello self,path", self.img_path)
         if self.img_path is not None and len(self.img_path) > 5:
             self.image = Image.open(self.img_path)
             # print(self.image)
@@ -247,7 +246,7 @@ class Gui:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
                     value[0].value * 30, value[1].value * 30) if value else (80, 80))  # tuple
                 self.put_image_in_canvas()
-            elif self.choice == Choice.SCALE:
+            elif self.choice == Choice.SCALE and value[0] is not Directions.NO_DIR:
                 v = 1.2 if value[0] is Directions.LEFT else 0.8
                 self.image = self.image_processing.scale(
                     self.image, v if value else 0.8)
@@ -261,8 +260,7 @@ class Gui:
 
             elif self.choice == Choice.WATER_MARK_IMAGE:
                 self.is_selecting = True
-                Thread(target= self.add_water_mark_image).start()
-
+                Thread(target=self.add_water_mark_image).start()
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
             self.put_paint_setting_frame()
@@ -366,7 +364,6 @@ class Gui:
 
     def b_press(self, b):
         self.enable["background"] = not self.enable["background"]
-        print(self.enable["background"])
 
     def d_press(self, d):
         self.root.destroy()
@@ -376,7 +373,6 @@ class Gui:
 
     def c_press(self, c):
         self.enable["camera"] = not self.enable["camera"]
-        print("hello from c")
 
     def get_new_frame(self):
 
@@ -398,7 +394,7 @@ class Gui:
             self.show_frame(s_mask, self.mask_canvas)
 
             if defects is not None:
-                counter, is_space = count_fingers_spaces(defects['simplified'])
+                _, is_space = count_fingers_spaces(defects['simplified'])
                 res = detect_postures(self.frame, hull, contour, center,
                                       defects['simplified'])
 
@@ -415,14 +411,9 @@ class Gui:
                 cv2.drawContours(drawing, [hull], 0, [0, 165, 255], 2)
                 cv2.circle(self.frame, center, 5, [0, 0, 255], 2)
 
-                for i, (start, end, far) in enumerate(defects['simplified']):
+                for i, (_, _, far) in enumerate(defects['simplified']):
                     if is_space[i]:
                         cv2.circle(self.frame, far, 5, [255, 0, 0], -1)
-
-                # if  self.enable["background"] and time.time() - self.prev_bg_time > 3:
-                #     self.bgFrame = cv2.cvtColor(
-                #         self.orginal_frame, cv2.COLOR_BGR2YCrCb)
-                #     self.prev_bg_time = time.time()
 
                 if self.enable["mouse"]:
                     *s, _ = self.frame.shape
@@ -432,21 +423,21 @@ class Gui:
                     tracking(self.frame, self.traverse_point,
                              defects['original'], contour, center)
 
-                if self.frame_counter % 10 == 0:
+                if self.frame_counter % 10 == 0 and self.enable["choosing"]:
                     posture = self.posture_queue.max_value()
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
                     mouse_need_choices = [
-                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR]
-                    # if choice need mouse and mouse is not enabled and choice is enabled ==> enable mouse 
-                    if choice in mouse_need_choices and not self.enable['mouse'] and self.enable["choosing"]:
-                        print("mosue enabled")
+                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR, Choice.CLICK]
+                    # if choice need mouse and mouse is not enabled  ==> enable mouse
+                    if choice in mouse_need_choices and not self.enable['mouse']:
                         self.s_press(None)
-                    # else mosue off  
-                    elif choice is not Choice.CLICK and self.enable['mouse']: # why ?? to stop the mouse when it is not important 
+                        print(f"{self.enable['mouse']=}")
+                    # else stop the mouse because there is no need to be enabled
+                    else:
                         self.s_press(None)
                     print(f"{choice=},{value=}, {self.enable['mouse']=}")
-                    if choice is Choice.CLICK and self.enable['mouse']:
+                    if choice is Choice.CLICK:# choice must not be click when the mouse is not enabled so the second condition must always be true  and self.enable['mouse']:
                         print("this is a click")
                         if self.input_mapper.current_choice in [Choice.PAINT, Choice.CLEAR]:
                             print("long click")
@@ -459,7 +450,6 @@ class Gui:
                         click_state(Directions.UP)
                         if self.enable["choosing"]:
                             self.choose(choice, value)
-
 
         except:
             print('\n\n')
