@@ -211,7 +211,7 @@ class Gui:
 
     def change_color(self):
         self.colors = askcolor(title="Tkinter Color Chooser")
-        self.is_selecting = False 
+        self.is_selecting = False
 
     def add_water_mark_image(self):
         water_mark_path = self.open_file_dialog()
@@ -260,14 +260,14 @@ class Gui:
                 self.put_image_in_canvas()
             elif self.choice == Choice.SAVE:
                 self.save2()
+                self.input_mapper.current_choice = Choice.NOTHING
             elif self.choice == Choice.SKEW:
                 self.image = self.image_processing.shear(
                     self.image, (value[0].value * 2, value[1].value * 2) if value else (-1.5, 0.5))
                 self.put_image_in_canvas()
 
-            elif self.choice == Choice.WATER_MARK_IMAGE:
+            elif self.choice == Choice.WATER_MARK_IMAGE and not self.is_selecting:
                 self.is_selecting = True
-                Thread(target=self.add_water_mark_image).start()
                 Thread(target=self.add_water_mark_image).start()
 
         if self.choice in (Choice.PAINT, Choice.CLEAR):
@@ -278,7 +278,7 @@ class Gui:
             elif self.choice == Choice.SIZE_DEC:
                 self.brush_width.set(str(int(self.brush_width.get())-2))
             elif self.choice == Choice.COLOR_PICKER and not self.is_selecting:
-                self.is_selecting = True 
+                self.is_selecting = True
                 Thread(target=self.change_color).start()
         elif self.input_mapper.current_choice == Choice.CLEAR:
             if self.choice == Choice.SIZE_INC:
@@ -452,7 +452,7 @@ class Gui:
                     choice = self.input_mapper.map(posture)
                     value = get_direction_from(self.traverse_point)
                     mouse_need_choices = [
-                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR, Choice.CLICK]
+                        Choice.SELECT, Choice.PAINT, Choice.COLOR_PICKER, Choice.CLEAR, Choice.CLICK, Choice.WATER_MARK_IMAGE]
                     # if choice need mouse and mouse is not enabled  ==> enable mouse
                     if choice in mouse_need_choices and not self.enable['mouse']:
                         self.enable['mouse'] = True
