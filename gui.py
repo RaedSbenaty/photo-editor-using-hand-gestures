@@ -29,6 +29,7 @@ class Gui:
         self.root.bind('b', self.b_press)
         self.root.bind('d', self.d_press)
         self.root.bind('o', self.o_press)
+        self.root.bind('p', self.o_press)
         self.root.bind('c', self.c_press)
 
         # screen_width = self.root.winfo_screenwidth()
@@ -254,8 +255,11 @@ class Gui:
                 self.image = self.image_processing.scale_rotate_translate(self.image, new_center=(
                     value[0] * 30, value[1] * 30) if value else (40, 40))  # tuple
                 self.put_image_in_canvas()
-            elif self.choice == Choice.SCALE and value[0] != 0:
-                v = 1.2 if value[0] == 1 else 0.8
+            elif self.choice == Choice.SCALE:
+                if value and value[0] != 0:
+                    v = 1.2 if value[0] == 1 else 0.8
+                else:
+                    v = 1.2
                 self.image = self.image_processing.scale(
                     self.image, v)
                 self.put_image_in_canvas()
