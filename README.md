@@ -14,8 +14,7 @@ download release.rar from releases section, unzip the file, and run pAInter.exe 
 
 # Work team
 * [AbdulRahman AlArmashi](https://github.com/abdulrahman-alarmashi)
-* [Abdulaleem Alsayed
-](https://github.com/aabadaa)
-* [Sedra Merkhan
-](https://github.com/sedramerkhan)
+* [Abdulaleem Alsayed](https://github.com/aabadaa)
+* [Raed Sbenaty](https://github.com/RaedSbenaty)
+* [Sedra Merkhan](https://github.com/sedramerkhan)
 
