@@ -119,24 +119,12 @@ def hand_detection(frame, bgFrame=None):
     if bgFrame is not None:
         ycrcb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
         diff = ycbcr_substract(ycrcb_frame, bgFrame)
-        # diff = brg_substract(frame, bgFrame)
         skin_mask = diff & skin_mask
 
-    # skin_mask = opening(skin_mask)
     skin_mask = closing(skin_mask)
     contour = find_hand_contours(skin_mask)
     if contour is not None:
         hull = cv2.convexHull(contour)
-
-        # k = cv2.waitKey(10)
-        # if k == ord('h'):
-        # width = get_rightmost_point(hull)[0] - get_leftmost_point(hull)[0]
-        # height = get_lowest_point(hull)[1] - get_highest_point(hull)[1]
-        # ratio = width/height
-        # area = cv2.contourArea(hull)
-        # mini = min(mini, width/height)
-        # maxi = max(maxi, width/height)
-        # print(mini, maxi)
 
         center = find_center(contour)
         contour = cv2.approxPolyDP(
@@ -180,7 +168,6 @@ def detect_postures(frame, hull, contour, center, defects):
     down = get_lowest_point(hull)
     opened_defectes = [np.array(d[2]) for d, _ in filter(
         lambda s: s[1], zip(defects, is_space))]
-    # cv2.circle(frame, right, 7, [0, 255, 255], 2)
 
     if finger_spaces_counter == 1:
         areahull = cv2.contourArea(hull)
@@ -212,7 +199,6 @@ def detect_postures(frame, hull, contour, center, defects):
             lambda s: s[1], zip(defects, is_space))], key=lambda x: x[2][0])
         middle_defect = opened_defectes[1]
         start, end = middle_defect[0], middle_defect[1]
-        # cv2.circle(frame, start, 7, [0, 255, 255], 2)
         return Posture.FOUR_RIGHT if start[1] > end[1] else Posture.FOUR_LEFT
 
     if finger_spaces_counter == 5:
@@ -225,55 +211,3 @@ def detect_postures(frame, hull, contour, center, defects):
 
     return Posture.NONE
 
-
-# def detect_postures2(frame, hull, contour, finger_spaces_counter):
-#     # define area of hull and area of hand
-#     areahull = cv2.contourArea(hull)
-#     areacnt = cv2.contourArea(contour)
-#     # find the percentage of area not covered by hand in convex hull
-#     arearatio = ((areahull - areacnt) / areacnt) * 100
-#     # print corresponding gestures which are in their ranges
-#     font = cv2.FONT_HERSHEY_SIMPLEX
-#     if finger_spaces_counter == 1:
-#         if areacnt < 2000:
-#             cv2.putText(frame, 'Put hand in the box', (0, 50),
-#                         font, 2, (0, 0, 255), 3, cv2.LINE_AA)
-#         else:
-#             if arearatio < 12:
-#                 cv2.putText(frame, '0', (0, 50), font, 2,
-#                             (0, 0, 255), 3, cv2.LINE_AA)
-#             elif arearatio < 17.5:
-#                 cv2.putText(frame, 'Best of luck', (0, 50),
-#                             font, 2, (0, 0, 255), 3, cv2.LINE_AA)
-
-#             else:
-#                 cv2.putText(frame, '1', (0, 50), font, 2,
-#                             (0, 0, 255), 3, cv2.LINE_AA)
-
-#     elif finger_spaces_counter == 2:
-#         cv2.putText(frame, '2', (0, 50), font, 2,
-#                     (0, 0, 255), 3, cv2.LINE_AA)
-
-#     elif finger_spaces_counter == 3:
-#         if arearatio < 27:
-#             cv2.putText(frame, '3', (0, 50), font, 2,
-#                         (0, 0, 255), 3, cv2.LINE_AA)
-#         else:
-#             cv2.putText(frame, 'ok', (0, 50), font, 2,
-#                         (0, 0, 255), 3, cv2.LINE_AA)
-
-#     elif finger_spaces_counter == 4:
-#         cv2.putText(frame, '4', (0, 50), font, 2,
-#                     (0, 0, 255), 3, cv2.LINE_AA)
-
-#     elif finger_spaces_counter == 5:
-#         cv2.putText(frame, '5', (0, 50), font, 2,
-#                     (0, 0, 255), 3, cv2.LINE_AA)
-
-#     elif finger_spaces_counter == 6:
-#         cv2.putText(frame, 'reposition', (0, 50), font,
-#                     2, (0, 0, 255), 3, cv2.LINE_AA)
-
-#     else:
-#         cv2.putText(frame, 'reposition', (10, 50), font,
-#                     2, (0, 0, 255), 3, cv2.LINE_AA)

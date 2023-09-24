@@ -1,6 +1,5 @@
 import pyautogui
 from motion_direction import Directions
-import pyautogui as p
 
 
 def convert(point, frame_size):

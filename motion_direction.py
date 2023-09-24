@@ -1,5 +1,5 @@
 from enum import Enum
-from Queue import Queue
+from frames_queue import FramesQueue
 
 
 class Directions(Enum):
@@ -10,7 +10,7 @@ class Directions(Enum):
     NO_DIR = 0
 
 
-def get_direction_from(q: Queue):
+def get_direction_from(q: FramesQueue):
     x_diff,y_diff = get_diff(q)
     x_diff, y_diff = y_diff,x_diff
     is_up = y_diff < 0
@@ -22,7 +22,7 @@ def get_direction_from(q: Queue):
         out[1] = Directions.UP if is_up else Directions.DOWN
     return out
 
-def get_diff(q:Queue):
+def get_diff(q:FramesQueue):
     start, end = q.get_first_last()
     x_diff = end[1] - start[1]
     y_diff = end[0] - start[0]
